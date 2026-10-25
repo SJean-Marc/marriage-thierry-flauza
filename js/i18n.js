@@ -10,7 +10,7 @@ export const TEXTES = {
   fr: {
     "titre-page": "Mariage de Thierry & Flauza",
     "accueil-intro": "Nos familles ont la joie de vous convier au mariage de",
-    "accueil-suite": "et seraient honorées de votre présence à cette occasion",
+    "accueil-suite": "et seraient honorées de votre présence à cet évènement",
     "accueil-dates": "17 & 18 mars 2027",
     "invitation-requise":
       "Pour découvrir le programme, utilisez le lien ou le QR code de votre faire-part.",
