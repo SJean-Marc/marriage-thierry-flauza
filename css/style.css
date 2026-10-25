@@ -30,6 +30,7 @@ body {
     var(--fond);
   color: var(--texte);
   font-family: var(--police-texte);
+  font-variant-numeric: lining-nums;
   font-size: 1.2rem;
   line-height: 1.5;
   overflow-x: hidden;
