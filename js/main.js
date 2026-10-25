@@ -1,18 +1,26 @@
 import { CONFIG } from "./config.js";
 import { formaterDate, langueInitiale, traduire } from "./i18n.js";
-import { evenementsDeLaVersion, lireInvitation } from "./invitation.js";
+import { evenementVedette, evenementsDeLaVersion, lireInvitation } from "./invitation.js";
 import { construireEnvoi, validerReponse } from "./rsvp.js";
 
 const CLE_LANGUE = "langue";
 
-const ICONES = {
-  mairie:
-    '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5 6 14v4h36v-4L24 5Zm-14 16v15h4V21h-4Zm8 0v15h4V21h-4Zm8 0v15h4V21h-4Zm8 0v15h4V21h-4ZM6 39v4h36v-4H6Z"/></svg>',
-  religieux:
-    '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4c3 4 4 7 4 9a4 4 0 0 1-8 0c0-2 1-5 4-9Zm-16 16h32c0 7-6 12-14 12h-4C14 32 8 27 8 20Zm13 14h6v4h6v4H15v-4h6v-4Z"/></svg>',
-  soiree:
-    '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m9 6 10 3-3 11a5 5 0 0 1-4 4l-2 9 3 1-1 3-9-3 1-3 3 1 2-9a5 5 0 0 1-2-5L9 6Zm30 0 2 12a5 5 0 0 1-2 5l2 9 3-1 1 3-9 3-1-3 3-1-2-9a5 5 0 0 1-4-4l-3-11 10-3ZM24 2l1 4h-2l1-4Z"/></svg>',
-};
+// Arche orientale des cartes (même forme que le faire-part), dessinée dans un repère 290 × 330.
+const ARCHE_LARGEUR = 290;
+const ARCHE_HAUTEUR = 330;
+
+function cheminArche(l, h) {
+  const m = l / 2;
+  return `M0 ${h - 12} L0 64 C0 48 16 40 36 38 C${m - 62} 33 ${m - 24} 24 ${m} 0 ` +
+    `C${m + 24} 24 ${m + 62} 33 ${l - 36} 38 C${l - 16} 40 ${l} 48 ${l} 64 L${l} ${h - 12} ` +
+    `Q${l} ${h} ${l - 12} ${h} L12 ${h} Q0 ${h} 0 ${h - 12} Z`;
+}
+
+const ARCHE_SVG =
+  `<svg class="arche" viewBox="0 0 ${ARCHE_LARGEUR} ${ARCHE_HAUTEUR}" preserveAspectRatio="none" aria-hidden="true">` +
+  `<path class="arche-exterieur" d="${cheminArche(ARCHE_LARGEUR, ARCHE_HAUTEUR)}"/>` +
+  `<path class="arche-interieur" d="${cheminArche(ARCHE_LARGEUR - 14, ARCHE_HAUTEUR - 14)}" transform="translate(7 9)"/>` +
+  `</svg>`;
 
 const etat = {
   langue: langueInitiale(lireLangueMemorisee()),
@@ -113,11 +121,15 @@ function afficherEvenements() {
     return;
   }
   const conteneur = document.getElementById("cartes-evenements");
-  const cartes = evenementsDeLaVersion(etat.invitation.version, CONFIG.evenementsParVersion).map(
+  const evenements = evenementsDeLaVersion(etat.invitation.version, CONFIG.evenementsParVersion);
+  const vedette = evenementVedette(evenements);
+  const cartes = evenements.map(
     (cle) => {
-      const carte = element("article", `carte carte-${cle}`);
-      const icone = element("div", "carte-icone");
-      icone.innerHTML = ICONES[cle];
+      const carte = element("article", `carte carte-${cle}${cle === vedette ? " vedette" : ""}`);
+      carte.innerHTML = ARCHE_SVG;
+      const icone = element("img", "carte-icone");
+      icone.src = `assets/img/icone-${cle}.png`;
+      icone.alt = "";
       carte.append(
         icone,
         element("h3", "carte-titre", t(`evt-${cle}-titre`)),

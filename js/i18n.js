@@ -9,7 +9,8 @@ const LOCALES = { fr: "fr-FR", ta: "ta-IN" };
 export const TEXTES = {
   fr: {
     "titre-page": "Mariage de Thierry & Flauza",
-    "accueil-intro": "Nous avons la joie de vous inviter à notre mariage",
+    "accueil-intro": "Nos familles ont la joie de vous convier au mariage de",
+    "accueil-suite": "et seraient honorées de votre présence à cette occasion",
     "accueil-dates": "17 & 18 mars 2027",
     "invitation-requise":
       "Pour découvrir le programme, utilisez le lien ou le QR code de votre faire-part.",
@@ -27,7 +28,7 @@ export const TEXTES = {
     "lieu-revele-le": "Lieu communiqué le {date}",
     "lien-itineraire": "Itinéraire",
     "rsvp-titre": "Confirmer votre présence",
-    "rsvp-limite": "Merci de répondre avant le {date}.",
+    "rsvp-limite": "Merci de confirmer votre présence avant le {date}.",
     "rsvp-oui": "Nous serons présents",
     "rsvp-non": "Nous ne pourrons pas venir",
     "rsvp-personnes-oui": "Personnes présentes",
@@ -60,7 +61,8 @@ export const TEXTES = {
   },
   ta: {
     "titre-page": "Thierry & Flauza திருமணம்",
-    "accueil-intro": "எங்கள் திருமணத்திற்கு உங்களை அன்புடன் அழைக்கிறோம்",
+    "accueil-intro": "எங்கள் குடும்பத்தினர் மகிழ்ச்சியுடன் அழைக்கும்",
+    "accueil-suite": "திருமண விழாவில் உங்கள் வருகையை அன்புடன் எதிர்பார்க்கிறோம்",
     "accueil-dates": "மார்ச் 17 & 18, 2027",
     "invitation-requise":
       "நிகழ்ச்சி விவரங்களைக் காண, உங்கள் அழைப்பிதழில் உள்ள இணைப்பையோ QR குறியீட்டையோ பயன்படுத்தவும்.",
@@ -78,7 +80,7 @@ export const TEXTES = {
     "lieu-revele-le": "இடம் {date} அன்று அறிவிக்கப்படும்",
     "lien-itineraire": "வழி",
     "rsvp-titre": "உங்கள் வருகையை உறுதிசெய்யுங்கள்",
-    "rsvp-limite": "{date}-க்குள் பதிலளிக்கவும்.",
+    "rsvp-limite": "{date}-க்குள் உங்கள் வருகையை உறுதிசெய்யவும்.",
     "rsvp-oui": "நாங்கள் வருகிறோம்",
     "rsvp-non": "எங்களால் வர இயலாது",
     "rsvp-personnes-oui": "வருகை தரும் நபர்கள்",

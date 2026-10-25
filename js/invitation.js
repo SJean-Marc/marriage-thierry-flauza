@@ -8,6 +8,11 @@ export function lireInvitation(recherche, versions) {
   return { code, version: versions[code] };
 }
 
+// Événement mis en avant (carte pleine) : la cérémonie religieuse, sinon la soirée.
+export function evenementVedette(evenements) {
+  return evenements.includes("religieux") ? "religieux" : "soiree";
+}
+
 export function evenementsDeLaVersion(version, evenementsParVersion) {
   return evenementsParVersion[version] ?? [];
 }

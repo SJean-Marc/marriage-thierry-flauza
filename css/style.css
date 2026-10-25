@@ -183,11 +183,33 @@ body {
 }
 
 .accueil-intro {
-  max-width: 30ch;
+  max-width: 32ch;
   margin: 0 0 12px;
-  color: var(--texte-doux);
+  color: var(--texte);
   font-style: italic;
+  font-weight: 600;
   font-size: 1.25rem;
+}
+
+/* Ornement doré du faire-part entre deux filets */
+.ornement {
+  position: relative;
+  width: min(420px, 80%);
+  height: 40px;
+  margin: 10px auto;
+  background:
+    linear-gradient(var(--or), var(--or)) left center / calc(50% - 50px) 1px no-repeat,
+    linear-gradient(var(--or), var(--or)) right center / calc(50% - 50px) 1px no-repeat;
+}
+
+.ornement img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  transform: translate(-50%, -50%);
+  -webkit-mask-image: radial-gradient(ellipse, #000 50%, transparent 70%);
+  mask-image: radial-gradient(ellipse, #000 50%, transparent 70%);
 }
 
 .maries {
@@ -266,46 +288,72 @@ h2::after {
 }
 
 .carte {
+  position: relative;
+  isolation: isolate;
   width: min(100%, 290px);
-  padding: 44px 20px 28px;
-  background: var(--fond-clair);
-  border: 1.5px solid var(--or);
-  border-radius: 145px 145px 16px 16px / 80px 80px 16px 16px;
-  box-shadow:
-    inset 0 0 0 5px var(--fond-clair),
-    inset 0 0 0 6px var(--or-clair);
+  min-height: 330px;
+  padding: 48px 20px 30px;
 }
 
-.carte-religieux {
-  background: var(--bordeaux);
+.carte .arche {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.arche path {
+  vector-effect: non-scaling-stroke;
+}
+
+.arche-exterieur {
+  fill: var(--fond-clair);
+  stroke: var(--or);
+  stroke-width: 1.5;
+}
+
+.arche-interieur {
+  fill: none;
+  stroke: var(--or-clair);
+  stroke-width: 1;
+}
+
+.vedette {
   color: var(--fond-clair);
-  box-shadow:
-    inset 0 0 0 5px var(--bordeaux),
-    inset 0 0 0 6px var(--or-clair),
-    0 10px 30px rgba(94, 11, 30, 0.25);
 }
 
-.carte-icone svg {
-  width: 44px;
-  height: 44px;
-  fill: var(--or);
+.vedette .arche-exterieur {
+  fill: var(--bordeaux);
 }
 
-.carte-religieux .carte-icone svg {
-  fill: var(--or-clair);
+.vedette .arche {
+  filter: drop-shadow(0 8px 18px rgba(94, 11, 30, 0.28));
+}
+
+.carte-icone {
+  display: block;
+  height: 46px;
+  margin: 0 auto;
+}
+
+/* Les coupes sont foncées : on les éclaircit sur la carte bordeaux (version soirée seule). */
+.vedette.carte-soiree .carte-icone {
+  filter: brightness(2.1) saturate(0.8);
 }
 
 .carte-titre {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: var(--or);
   font-family: var(--police-titre);
   font-weight: 600;
   font-size: 1.2rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.carte-religieux .carte-titre {
+.vedette .carte-titre {
   color: var(--or-clair);
 }
 
@@ -317,17 +365,17 @@ h2::after {
 }
 
 .carte-heure {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--or);
   font-weight: 700;
   font-size: 1.6rem;
 }
 
-.carte-religieux .carte-date {
+.vedette .carte-date {
   color: var(--fond-clair);
 }
 
-.carte-religieux .carte-heure {
+.vedette .carte-heure {
   color: var(--or-clair);
 }
 

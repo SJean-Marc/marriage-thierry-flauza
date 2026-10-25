@@ -26,11 +26,11 @@ describe("traduire", () => {
   });
 
   it("should_replace_parameters", () => {
-    assert.equal(traduire("fr", "rsvp-limite", { date: "28 janvier 2027" }), "Merci de répondre avant le 28 janvier 2027.");
+    assert.equal(traduire("fr", "rsvp-limite", { date: "28 janvier 2027" }), "Merci de confirmer votre présence avant le 28 janvier 2027.");
   });
 
   it("should_keep_marker_when_parameter_is_missing", () => {
-    assert.equal(traduire("fr", "rsvp-limite"), "Merci de répondre avant le {date}.");
+    assert.equal(traduire("fr", "rsvp-limite"), "Merci de confirmer votre présence avant le {date}.");
   });
 });
 
