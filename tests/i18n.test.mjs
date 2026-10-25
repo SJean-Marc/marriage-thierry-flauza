@@ -43,6 +43,14 @@ describe("langueInitiale", () => {
     assert.equal(langueInitiale(null), "fr");
   });
 
+  it("should_use_link_language_over_stored_language", () => {
+    assert.equal(langueInitiale("fr", "ta"), "ta");
+  });
+
+  it("should_ignore_unsupported_link_language", () => {
+    assert.equal(langueInitiale("ta", "de"), "ta");
+  });
+
   it("should_return_french_when_stored_language_is_unsupported", () => {
     assert.equal(langueInitiale("de"), "fr");
   });

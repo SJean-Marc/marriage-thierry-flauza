@@ -23,7 +23,7 @@ const ARCHE_SVG =
   `</svg>`;
 
 const etat = {
-  langue: langueInitiale(lireLangueMemorisee()),
+  langue: langueInitiale(lireLangueMemorisee(), new URLSearchParams(window.location.search).get("lang")),
   invitation: lireInvitation(window.location.search, CONFIG.versions),
   lieux: null,
 };

@@ -121,7 +121,10 @@ export function traduire(langue, cle, parametres = {}) {
   return texte.replace(/\{(\w+)\}/g, (marqueur, nom) => parametres[nom] ?? marqueur);
 }
 
-export function langueInitiale(langueMemorisee) {
+export function langueInitiale(langueMemorisee, langueDuLien = null) {
+  if (LANGUES.includes(langueDuLien)) {
+    return langueDuLien;
+  }
   return LANGUES.includes(langueMemorisee) ? langueMemorisee : LANGUE_PAR_DEFAUT;
 }
 
