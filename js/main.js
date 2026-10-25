@@ -289,7 +289,14 @@ function initialiserLiens() {
 
 // --- Démarrage ---
 
+function initialiserContact() {
+  const lien = document.getElementById("lien-contact");
+  lien.href = `mailto:${CONFIG.contact}`;
+  lien.textContent = CONFIG.contact;
+}
+
 function demarrer() {
+  initialiserContact();
   document.querySelectorAll("[data-langue]").forEach((bouton) => {
     bouton.addEventListener("click", () => changerLangue(bouton.dataset.langue));
   });

@@ -28,6 +28,8 @@ export const CONFIG = {
     paypal: "https://www.paypal.me/", // PROVISOIRE : lien paypal.me
   },
 
+  contact: "flauza.thierry@gmail.com",
+
   photos: {
     voir: "https://www.pcloud.com/", // PROVISOIRE : lien de partage pCloud
     deposer: "https://www.pcloud.com/", // PROVISOIRE : lien de dépôt (upload link) pCloud

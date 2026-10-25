@@ -58,6 +58,7 @@ export const TEXTES = {
     "photos-voir": "Voir les photos et vidéos",
     "photos-deposer": "Déposer mes photos et vidéos",
     "pied": "Thierry & Flauza · 17 & 18 mars 2027",
+    "contact-texte": "Une question ? Écrivez-nous :",
   },
   ta: {
     "titre-page": "Thierry & Flauza திருமணம்",
@@ -111,6 +112,7 @@ export const TEXTES = {
     "photos-voir": "புகைப்படங்களைப் பார்க்க",
     "photos-deposer": "என் புகைப்படங்களைப் பதிவேற்ற",
     "pied": "Thierry & Flauza · மார்ச் 17 & 18, 2027",
+    "contact-texte": "கேள்விகள் இருந்தால் எங்களுக்கு எழுதுங்கள்:",
   },
 };
 

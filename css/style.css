@@ -577,6 +577,19 @@ legend {
   letter-spacing: 0.08em;
 }
 
+.contact {
+  position: relative;
+  z-index: 1;
+  font-family: var(--police-texte);
+  letter-spacing: 0;
+}
+
+.contact a {
+  color: var(--bordeaux);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .pied .coin {
   width: clamp(80px, 18vw, 180px);
 }
