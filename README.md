@@ -6,9 +6,9 @@ Site du mariage (17 et 18 mars 2027), hébergé sur GitHub Pages. Les spécifica
 
 | Version | Événements | Lien |
 |---|---|---|
-| A | Mairie + religieux + soirée | `…/?i=CgX4ht` |
-| B | Religieux + soirée | `…/?i=NXrmCt` |
-| C | Soirée | `…/?i=rLXUq7` |
+| A | Mairie + religieux + soirée | `https://mariage-flauza-thierry.fr/?i=CgX4ht` |
+| B | Religieux + soirée | `https://mariage-flauza-thierry.fr/?i=NXrmCt` |
+| C | Soirée | `https://mariage-flauza-thierry.fr/?i=rLXUq7` |
 
 Sans code valide, le site n'affiche que l'accueil.
 
