@@ -1,0 +1,533 @@
+:root {
+  color-scheme: light;
+  --fond: #fbf0de;
+  --fond-clair: #fff8ec;
+  --bordeaux: #7a1028;
+  --bordeaux-fonce: #5e0b1e;
+  --or: #b8862f;
+  --or-clair: #e2bf73;
+  --texte: #3b2a20;
+  --texte-doux: #7a6250;
+  --police-titre: "Cormorant Garamond", Georgia, serif;
+  --police-script: "Great Vibes", cursive;
+  --police-texte: "Cormorant Garamond", Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 20%, var(--fond-clair) 0%, transparent 60%),
+    var(--fond);
+  color: var(--texte);
+  font-family: var(--police-texte);
+  font-size: 1.2rem;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+:lang(ta) body,
+:lang(ta) h2,
+:lang(ta) h3,
+:lang(ta) .bouton,
+:lang(ta) button {
+  font-family: "Noto Serif Tamil", var(--police-texte);
+}
+
+:lang(ta) body {
+  font-size: 1rem;
+}
+
+:lang(ta) h2,
+:lang(ta) .accueil-dates,
+:lang(ta) .carte-titre {
+  letter-spacing: 0;
+}
+
+:lang(ta) .carte-date {
+  font-size: 1.1rem;
+}
+
+:lang(ta) .carte-heure {
+  font-size: 1.3rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* --- Sélecteur de langue --- */
+
+.langues {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 248, 236, 0.92);
+  border: 1px solid var(--or-clair);
+  border-radius: 999px;
+}
+
+.langues button {
+  border: 0;
+  background: transparent;
+  color: var(--bordeaux);
+  font: 600 0.95rem var(--police-titre);
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.langues button[lang="ta"] {
+  font-family: "Noto Serif Tamil", serif;
+  font-size: 0.85rem;
+}
+
+.langues button[aria-pressed="true"] {
+  background: var(--bordeaux);
+  color: var(--fond-clair);
+}
+
+/* --- Coins fleuris --- */
+
+.coin {
+  position: absolute;
+  width: clamp(80px, 20vw, 210px);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.coin-haut-gauche {
+  top: 0;
+  left: 0;
+  -webkit-mask-image: radial-gradient(ellipse at top left, #000 55%, transparent 72%);
+  mask-image: radial-gradient(ellipse at top left, #000 55%, transparent 72%);
+}
+
+.coin-haut-droit {
+  top: 0;
+  right: 0;
+  width: clamp(54px, 13vw, 140px);
+  -webkit-mask-image: radial-gradient(ellipse at top right, #000 55%, transparent 72%);
+  mask-image: radial-gradient(ellipse at top right, #000 55%, transparent 72%);
+}
+
+.coin-bas-gauche {
+  bottom: 0;
+  left: 0;
+  -webkit-mask-image: radial-gradient(ellipse at bottom left, #000 55%, transparent 72%);
+  mask-image: radial-gradient(ellipse at bottom left, #000 55%, transparent 72%);
+}
+
+.coin-bas-droit {
+  bottom: 0;
+  right: 0;
+  -webkit-mask-image: radial-gradient(ellipse at bottom right, #000 55%, transparent 72%);
+  mask-image: radial-gradient(ellipse at bottom right, #000 55%, transparent 72%);
+}
+
+/* --- Filet doré --- */
+
+.filet {
+  position: relative;
+  width: min(420px, 70%);
+  height: 14px;
+  margin: 18px auto;
+  background:
+    linear-gradient(var(--or), var(--or)) left center / calc(50% - 14px) 1px no-repeat,
+    linear-gradient(var(--or), var(--or)) right center / calc(50% - 14px) 1px no-repeat;
+}
+
+.filet::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--or);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.filet-court {
+  width: 60%;
+  margin: 10px auto;
+}
+
+/* --- Accueil --- */
+
+.accueil {
+  position: relative;
+  min-height: 92vh;
+  min-height: 92svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 16px 48px;
+  text-align: center;
+}
+
+.accueil-intro {
+  max-width: 30ch;
+  margin: 0 0 12px;
+  color: var(--texte-doux);
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+.maries {
+  margin: 0;
+  font-family: var(--police-script);
+  font-weight: 400;
+  color: var(--bordeaux);
+  font-size: clamp(3rem, 11vw, 6.5rem);
+  line-height: 1.1;
+}
+
+.esperluette {
+  color: var(--or);
+  font-size: 0.8em;
+}
+
+.accueil-dates {
+  margin: 0;
+  color: var(--or);
+  font-family: var(--police-titre);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.invitation-requise {
+  max-width: 34ch;
+  margin-top: 32px;
+  color: var(--texte-doux);
+  font-style: italic;
+}
+
+
+/* --- Sections --- */
+
+.section {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.section > p {
+  max-width: 46ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h2 {
+  position: relative;
+  margin: 0 0 28px;
+  color: var(--bordeaux);
+  font-family: var(--police-titre);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+h2::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 1px;
+  margin: 14px auto 0;
+  background: var(--or);
+}
+
+/* --- Programme : cartes en arche --- */
+
+.cartes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+.carte {
+  width: min(100%, 290px);
+  padding: 44px 20px 28px;
+  background: var(--fond-clair);
+  border: 1.5px solid var(--or);
+  border-radius: 145px 145px 16px 16px / 80px 80px 16px 16px;
+  box-shadow:
+    inset 0 0 0 5px var(--fond-clair),
+    inset 0 0 0 6px var(--or-clair);
+}
+
+.carte-religieux {
+  background: var(--bordeaux);
+  color: var(--fond-clair);
+  box-shadow:
+    inset 0 0 0 5px var(--bordeaux),
+    inset 0 0 0 6px var(--or-clair),
+    0 10px 30px rgba(94, 11, 30, 0.25);
+}
+
+.carte-icone svg {
+  width: 44px;
+  height: 44px;
+  fill: var(--or);
+}
+
+.carte-religieux .carte-icone svg {
+  fill: var(--or-clair);
+}
+
+.carte-titre {
+  margin: 10px 0 0;
+  color: var(--or);
+  font-family: var(--police-titre);
+  font-weight: 600;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.carte-religieux .carte-titre {
+  color: var(--or-clair);
+}
+
+.carte-date {
+  margin: 0;
+  color: var(--bordeaux);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.carte-heure {
+  margin: 0 0 12px;
+  color: var(--or);
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+.carte-religieux .carte-date {
+  color: var(--fond-clair);
+}
+
+.carte-religieux .carte-heure {
+  color: var(--or-clair);
+}
+
+.lieu p {
+  margin: 0;
+}
+
+.lieu-masque {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.lieu-liens {
+  margin-top: 8px !important;
+}
+
+.lieu-liens a {
+  color: inherit;
+}
+
+/* --- Boutons --- */
+
+.bouton {
+  display: inline-block;
+  padding: 12px 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bordeaux);
+  color: var(--fond-clair);
+  font: 600 1.1rem var(--police-titre);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bouton:hover,
+.bouton:focus-visible {
+  background: var(--bordeaux-fonce);
+}
+
+.bouton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.bouton-secondaire,
+.retirer {
+  padding: 6px 16px;
+  border: 1px solid var(--or);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bordeaux);
+  font: 600 1rem var(--police-titre);
+  cursor: pointer;
+}
+
+/* --- Formulaire de présence --- */
+
+#formulaire-rsvp {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+fieldset {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+}
+
+.presence {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.presence label {
+  padding: 12px 16px;
+  border: 1px solid var(--or-clair);
+  border-radius: 12px;
+  background: var(--fond-clair);
+  text-align: left;
+  cursor: pointer;
+}
+
+.presence label:has(input:checked) {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 1px var(--bordeaux);
+}
+
+.presence input,
+.vegetarien input {
+  accent-color: var(--bordeaux);
+}
+
+legend {
+  margin: 0 auto 12px;
+  color: var(--bordeaux);
+  font-weight: 600;
+}
+
+#liste-personnes {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.personne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.personne input[type="text"] {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--or-clair);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--texte);
+  font: inherit;
+}
+
+.personne input[type="text"]:focus {
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 1px;
+}
+
+.absent .vegetarien {
+  display: none;
+}
+
+.piege {
+  position: absolute;
+  left: -9999px;
+}
+
+.message {
+  min-height: 1.5em;
+}
+
+.message.erreur {
+  color: #a3122a;
+}
+
+.message.succes {
+  padding: 20px;
+  border: 1px solid var(--or);
+  border-radius: 16px;
+  background: var(--fond-clair);
+  color: var(--bordeaux);
+  font-size: 1.3rem;
+}
+
+/* --- Cagnotte & photos --- */
+
+.cagnotte-moyens,
+.photos-liens {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.wero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 22px;
+  border: 1px solid var(--or-clair);
+  border-radius: 16px;
+  background: var(--fond-clair);
+}
+
+.wero-numero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--bordeaux);
+  font-size: 1.3rem;
+  user-select: all;
+}
+
+/* --- Pied de page --- */
+
+.pied {
+  position: relative;
+  min-height: 260px;
+  padding: 40px 16px 140px;
+  text-align: center;
+  color: var(--bordeaux);
+  font-family: var(--police-titre);
+  letter-spacing: 0.08em;
+}
+
+.pied .coin {
+  width: clamp(80px, 18vw, 180px);
+}

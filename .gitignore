@@ -1,0 +1,5 @@
+# Le faire-part et les lieux contiennent les adresses, qui ne doivent pas être publiées.
+IMG-*.jpg
+*:Zone.Identifier
+apps-script/lieux.local.json
+node_modules/

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Mariage de Thierry &amp; Flauza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Noto+Serif+Tamil:wght@400;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <nav class="langues" aria-label="Langue">
+    <button type="button" data-langue="fr" aria-pressed="true">FR</button>
+    <button type="button" data-langue="ta" aria-pressed="false" lang="ta">தமிழ்</button>
+  </nav>
+
+  <header class="accueil">
+    <img class="coin coin-haut-gauche" src="assets/img/coin-haut-gauche.jpg" alt="">
+    <img class="coin coin-haut-droit" src="assets/img/coin-haut-droit.jpg" alt="">
+    <p class="accueil-intro" data-i18n="accueil-intro"></p>
+    <h1 class="maries">
+      <span class="marie">Thierry</span>
+      <span class="esperluette">&amp;</span>
+      <span class="marie">Flauza</span>
+    </h1>
+    <div class="filet" aria-hidden="true"></div>
+    <p class="accueil-dates" data-i18n="accueil-dates"></p>
+    <p class="invitation-requise" id="invitation-requise" data-i18n="invitation-requise" hidden></p>
+  </header>
+
+  <main id="contenu-invite" hidden>
+
+    <section class="section programme" aria-labelledby="titre-programme">
+      <h2 id="titre-programme" data-i18n="programme-titre"></h2>
+      <div class="cartes" id="cartes-evenements"></div>
+    </section>
+
+    <section class="section rsvp" aria-labelledby="titre-rsvp">
+      <h2 id="titre-rsvp" data-i18n="rsvp-titre"></h2>
+      <p class="rsvp-limite" id="rsvp-limite"></p>
+      <form id="formulaire-rsvp" novalidate>
+        <fieldset class="presence">
+          <label><input type="radio" name="presence" value="oui"> <span data-i18n="rsvp-oui"></span></label>
+          <label><input type="radio" name="presence" value="non"> <span data-i18n="rsvp-non"></span></label>
+        </fieldset>
+        <fieldset class="personnes" id="bloc-personnes" hidden>
+          <legend id="legende-personnes"></legend>
+          <ul id="liste-personnes"></ul>
+          <button type="button" class="bouton-secondaire" id="ajouter-personne" data-i18n="rsvp-ajouter"></button>
+        </fieldset>
+        <div class="piege" aria-hidden="true">
+          <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <p class="message" id="message-rsvp" role="status"></p>
+        <button type="submit" class="bouton" id="envoyer-rsvp" data-i18n="rsvp-envoyer"></button>
+      </form>
+    </section>
+
+    <section class="section cagnotte" aria-labelledby="titre-cagnotte">
+      <h2 id="titre-cagnotte" data-i18n="cagnotte-titre"></h2>
+      <p data-i18n="cagnotte-texte"></p>
+      <div class="cagnotte-moyens">
+        <div class="wero">
+          <span data-i18n="cagnotte-wero"></span>
+          <span class="wero-numero">
+            <strong id="wero-telephone"></strong>
+            <button type="button" class="bouton-secondaire" id="copier-wero" data-i18n="cagnotte-copier"></button>
+          </span>
+        </div>
+        <a class="bouton" id="lien-lydia" target="_blank" rel="noopener" data-i18n="cagnotte-lydia"></a>
+        <a class="bouton" id="lien-paypal" target="_blank" rel="noopener" data-i18n="cagnotte-paypal"></a>
+      </div>
+    </section>
+
+    <section class="section photos" aria-labelledby="titre-photos">
+      <h2 id="titre-photos" data-i18n="photos-titre"></h2>
+      <p data-i18n="photos-texte"></p>
+      <div class="photos-liens">
+        <a class="bouton" id="lien-photos-voir" target="_blank" rel="noopener" data-i18n="photos-voir"></a>
+        <a class="bouton" id="lien-photos-deposer" target="_blank" rel="noopener" data-i18n="photos-deposer"></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <img class="coin coin-bas-gauche" src="assets/img/coin-bas-gauche.jpg" alt="">
+    <img class="coin coin-bas-droit" src="assets/img/coin-bas-droit.jpg" alt="">
+    <div class="filet" aria-hidden="true"></div>
+    <p data-i18n="pied"></p>
+  </footer>
+</body>
+</html>

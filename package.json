@@ -1,0 +1,8 @@
+{
+  "name": "marriage-thierry-flauza",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-test-coverage tests/"
+  }
+}
