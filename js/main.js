@@ -229,6 +229,7 @@ function creerChoixMenu(idPersonne, jour) {
     { valeur: "vegetarien", cleTexte: "rsvp-vegetarien", coche: false },
     { valeur: "non-vegetarien", cleTexte: "rsvp-non-vegetarien", coche: true },
   ]);
+  groupe.classList.add("champ-menu");
   groupe.querySelectorAll("input").forEach((radio) => {
     radio.dataset.jour = jour;
   });

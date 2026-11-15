@@ -536,6 +536,24 @@ h2::after {
   font-weight: 600;
 }
 
+/* « Menu » en retrait, avec un petit angle doré : il découle des événements du jour. */
+.champ-menu .intitule {
+  position: relative;
+  padding-left: 1.4em;
+}
+
+.champ-menu .intitule::before {
+  content: "";
+  position: absolute;
+  left: 0.3em;
+  top: 0.15em;
+  width: 0.7em;
+  height: 0.55em;
+  border-left: 1.5px solid var(--or);
+  border-bottom: 1.5px solid var(--or);
+  border-bottom-left-radius: 3px;
+}
+
 .champ-nom {
   flex: 1;
   min-width: 0;
