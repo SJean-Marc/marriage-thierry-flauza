@@ -284,7 +284,7 @@ function ajouterPersonne() {
   ligne.append(celluleRetirer);
 
   liste.append(ligne);
-  nom.focus();
+  return nom;
 }
 
 function lireReponse(formulaire) {
@@ -346,7 +346,8 @@ async function envoyerReponse(evenement) {
 
 function initialiserFormulaire() {
   construireEntete();
-  document.getElementById("ajouter-personne").addEventListener("click", ajouterPersonne);
+  // Focus seulement sur une ligne ajoutée par l'invité : au chargement, la page ne doit pas sauter au formulaire.
+  document.getElementById("ajouter-personne").addEventListener("click", () => ajouterPersonne().focus());
   document.getElementById("formulaire-rsvp").addEventListener("submit", envoyerReponse);
   ajouterPersonne();
 }
