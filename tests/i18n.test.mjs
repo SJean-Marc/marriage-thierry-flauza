@@ -10,15 +10,15 @@ describe("TEXTES", () => {
 
 describe("traduire", () => {
   it("should_return_french_text", () => {
-    assert.equal(traduire("fr", "rsvp-oui"), "Nous serons présents");
+    assert.equal(traduire("fr", "rsvp-present"), "Présent");
   });
 
   it("should_return_tamil_text", () => {
-    assert.equal(traduire("ta", "rsvp-oui"), "நாங்கள் வருகிறோம்");
+    assert.equal(traduire("ta", "rsvp-present"), "வருகை");
   });
 
   it("should_fall_back_to_french_when_language_is_unknown", () => {
-    assert.equal(traduire("en", "rsvp-oui"), "Nous serons présents");
+    assert.equal(traduire("en", "rsvp-present"), "Présent");
   });
 
   it("should_return_the_key_when_text_is_missing", () => {

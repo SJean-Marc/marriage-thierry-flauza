@@ -44,15 +44,12 @@
       <h2 id="titre-rsvp" data-i18n="rsvp-titre"></h2>
       <p class="rsvp-limite" id="rsvp-limite"></p>
       <form id="formulaire-rsvp" novalidate>
-        <fieldset class="presence">
-          <label><input type="radio" name="presence" value="oui"> <span data-i18n="rsvp-oui"></span></label>
-          <label><input type="radio" name="presence" value="non"> <span data-i18n="rsvp-non"></span></label>
-        </fieldset>
-        <fieldset class="personnes" id="bloc-personnes" hidden>
-          <legend id="legende-personnes"></legend>
-          <ul id="liste-personnes"></ul>
-          <button type="button" class="bouton-secondaire" id="ajouter-personne" data-i18n="rsvp-ajouter"></button>
-        </fieldset>
+        <p class="rsvp-aide" data-i18n="rsvp-aide"></p>
+        <table class="tableau-presence">
+          <thead><tr id="entete-presence"></tr></thead>
+          <tbody id="liste-personnes"></tbody>
+        </table>
+        <button type="button" class="bouton-secondaire" id="ajouter-personne" data-i18n="rsvp-ajouter"></button>
         <div class="piege" aria-hidden="true">
           <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
         </div>
@@ -65,13 +62,6 @@
       <h2 id="titre-cagnotte" data-i18n="cagnotte-titre"></h2>
       <p data-i18n="cagnotte-texte"></p>
       <div class="cagnotte-moyens">
-        <div class="wero">
-          <span data-i18n="cagnotte-wero"></span>
-          <span class="wero-numero">
-            <strong id="wero-telephone"></strong>
-            <button type="button" class="bouton-secondaire" id="copier-wero" data-i18n="cagnotte-copier"></button>
-          </span>
-        </div>
         <a class="bouton" id="lien-lydia" target="_blank" rel="noopener" data-i18n="cagnotte-lydia"></a>
         <a class="bouton" id="lien-paypal" target="_blank" rel="noopener" data-i18n="cagnotte-paypal"></a>
       </div>

@@ -23,7 +23,6 @@ export const CONFIG = {
   },
 
   cagnotte: {
-    weroTelephone: "06 00 00 00 00", // PROVISOIRE
     lydia: "https://lydia-app.com/", // PROVISOIRE : lien de la cagnotte Lydia
     paypal: "https://www.paypal.me/", // PROVISOIRE : lien paypal.me
   },

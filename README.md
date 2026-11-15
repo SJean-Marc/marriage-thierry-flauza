@@ -37,6 +37,6 @@ Les réponses arrivent dans l'onglet « Réponses » (une ligne par personne).
 
 ## Valeurs provisoires à remplacer (`js/config.js`)
 
-- numéro Wero, liens Lydia et PayPal ;
+- liens Lydia et PayPal ;
 - liens pCloud (consultation et dépôt) ;
 - date de révélation des lieux (propriété du script).

@@ -80,16 +80,26 @@ function poster(contexte, donnees) {
   return json(contexte.doPost({ postData: { contents: JSON.stringify(donnees) } }));
 }
 
+const TOUS_PRESENTS = { mairie: true, religieux: true, soiree: true };
+
 const ENVOI_VALIDE = {
   code: "CgX4ht",
   langue: "ta",
-  presence: "oui",
   personnes: [
-    { nom: " Thierry ", vegetarien: true },
-    { nom: "Flauza", vegetarien: false },
+    { nom: " Thierry ", presences: TOUS_PRESENTS, vegetarien: true, dessert: "velvet" },
+    {
+      nom: "Flauza",
+      presences: { mairie: false, religieux: true, soiree: true },
+      vegetarien: false,
+      dessert: "exotique",
+    },
   ],
   site: "",
 };
+
+function invite(nom, autres = {}) {
+  return { nom, presences: TOUS_PRESENTS, vegetarien: false, dessert: "pistache", ...autres };
+}
 
 describe("doGet", () => {
   it("should_reject_unknown_action", () => {
@@ -173,10 +183,37 @@ describe("doPost", () => {
 
     const [entetes, premiere, seconde] = script.feuille.lignes;
     assert.equal(script.feuille.lignes.length, 3);
-    assert.equal(entetes.join("|"), "Horodatage|Réponse n°|Version|Langue|Présence|Nom|Végétarien");
-    assert.equal(premiere.slice(1).join("|"), "1234abcd|A|ta|oui|Thierry|oui");
-    assert.equal(seconde.slice(1).join("|"), "1234abcd|A|ta|oui|Flauza|non");
+    assert.equal(
+      entetes.join("|"),
+      "Horodatage|Réponse n°|Version|Langue|Nom|Mairie|Religieux|Soirée|Végétarien|Dessert",
+    );
+    assert.equal(
+      premiere.slice(1).join("|"),
+      "1234abcd|A|ta|Thierry|présent|présent|présent|oui|Velvet fruits rouges",
+    );
+    assert.equal(
+      seconde.slice(1).join("|"),
+      "1234abcd|A|ta|Flauza|absent|présent|présent|non|Fruits exotiques",
+    );
     assert.equal(Object.prototype.toString.call(premiere[0]), "[object Date]");
+  });
+
+  it("should_leave_events_outside_the_invitation_empty", () => {
+    poster(script.contexte, {
+      ...ENVOI_VALIDE,
+      code: "rLXUq7",
+      personnes: [invite("Thierry", { presences: { soiree: true } })],
+    });
+    assert.equal(script.feuille.lignes[1].slice(5).join("|"), "||présent|non|Pistache fruits rouges");
+  });
+
+  it("should_ignore_presence_sent_for_events_outside_the_invitation", () => {
+    poster(script.contexte, {
+      ...ENVOI_VALIDE,
+      code: "NXrmCt",
+      personnes: [invite("Thierry")],
+    });
+    assert.equal(script.feuille.lignes[1][5], "");
   });
 
   it("should_take_and_release_the_lock", () => {
@@ -188,7 +225,7 @@ describe("doPost", () => {
   it("should_not_rewrite_header_when_sheet_already_has_rows", () => {
     const feuille = creerFeuille([["entêtes existantes"]]);
     const { contexte } = creerScript({ feuilleExistante: feuille });
-    poster(contexte, { ...ENVOI_VALIDE, personnes: [{ nom: "Thierry" }] });
+    poster(contexte, { ...ENVOI_VALIDE, personnes: [invite("Thierry")] });
     assert.equal(feuille.lignes.length, 2);
     assert.equal(feuille.lignes[0][0], "entêtes existantes");
   });
@@ -198,14 +235,32 @@ describe("doPost", () => {
     assert.equal(script.feuille.lignes[1][3], "fr");
   });
 
-  it("should_record_declined_answer", () => {
-    poster(script.contexte, { ...ENVOI_VALIDE, presence: "non", personnes: [{ nom: "Thierry" }] });
-    assert.equal(script.feuille.lignes[1].slice(4).join("|"), "non|Thierry|non");
+  it("should_record_person_absent_everywhere_without_vegetarian_nor_dessert", () => {
+    const absent = { mairie: false, religieux: false, soiree: false };
+    poster(script.contexte, {
+      ...ENVOI_VALIDE,
+      personnes: [invite("Thierry", { presences: absent, vegetarien: true, dessert: "" })],
+    });
+    assert.equal(script.feuille.lignes[1].slice(4).join("|"), "Thierry|absent|absent|absent|non|");
+  });
+
+  it("should_not_record_dessert_when_absent_from_reception", () => {
+    poster(script.contexte, {
+      ...ENVOI_VALIDE,
+      personnes: [
+        invite("Thierry", {
+          presences: { mairie: true, religieux: true, soiree: false },
+          vegetarien: true,
+          dessert: "inconnu",
+        }),
+      ],
+    });
+    assert.equal(script.feuille.lignes[1].slice(8).join("|"), "oui|");
   });
 
   it("should_neutralize_names_that_look_like_formulas", () => {
-    poster(script.contexte, { ...ENVOI_VALIDE, personnes: [{ nom: "=HYPERLINK(1)" }] });
-    assert.equal(script.feuille.lignes[1][5], "'=HYPERLINK(1)");
+    poster(script.contexte, { ...ENVOI_VALIDE, personnes: [invite("=HYPERLINK(1)")] });
+    assert.equal(script.feuille.lignes[1][4], "'=HYPERLINK(1)");
   });
 
   it("should_pretend_success_without_writing_when_honeypot_is_filled", () => {
@@ -225,21 +280,31 @@ describe("doPost", () => {
     });
   });
 
-  it("should_reject_invalid_presence", () => {
-    assert.deepEqual(poster(script.contexte, { ...ENVOI_VALIDE, presence: "peut-être" }), {
-      ok: false,
-      erreur: "presence-invalide",
+  const DESSERTS_INVALIDES = { absent: undefined, inconnu: "chocolat", prototype: "toString" };
+
+  for (const [cas, dessert] of Object.entries(DESSERTS_INVALIDES)) {
+    it(`should_reject_dessert_when_${cas}_for_a_guest_at_the_reception`, () => {
+      assert.deepEqual(poster(script.contexte, { ...ENVOI_VALIDE, personnes: [invite("Thierry", { dessert })] }), {
+        ok: false,
+        erreur: "dessert-invalide",
+      });
+      assert.equal(script.feuille.lignes.length, 0);
     });
-  });
+  }
 
   const PERSONNES_INVALIDES = {
     absentes: undefined,
     vides: [],
-    trop_nombreuses: Array.from({ length: 21 }, () => ({ nom: "Invité" })),
+    trop_nombreuses: Array.from({ length: 21 }, () => invite("Invité")),
     nulles: [null],
-    nom_non_texte: [{ nom: 42 }],
-    nom_blanc: [{ nom: "  " }],
-    nom_trop_long: [{ nom: "x".repeat(101) }],
+    non_objet: ["Thierry"],
+    nom_non_texte: [invite(42)],
+    nom_blanc: [invite("  ")],
+    nom_trop_long: [invite("x".repeat(101))],
+    presences_absentes: [invite("Thierry", { presences: undefined })],
+    presences_nulles: [invite("Thierry", { presences: null })],
+    presence_manquante: [invite("Thierry", { presences: { religieux: true, soiree: true } })],
+    presence_non_booleenne: [invite("Thierry", { presences: { ...TOUS_PRESENTS, mairie: "oui" } })],
   };
 
   for (const [cas, personnes] of Object.entries(PERSONNES_INVALIDES)) {

@@ -1,64 +1,129 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { construireEnvoi, validerReponse } from "../js/rsvp.js";
+import { construireEnvoi, estPresenteQuelquePart, validerReponse } from "../js/rsvp.js";
+
+const TOUS = ["mairie", "religieux", "soiree"];
+
+function personne(nom, presences, autres = {}) {
+  return { nom, presences, vegetarien: false, dessert: "", ...autres };
+}
+
+describe("estPresenteQuelquePart", () => {
+  it("should_return_true_when_present_at_one_event", () => {
+    assert.equal(estPresenteQuelquePart(personne("A", { mairie: false, soiree: true })), true);
+  });
+
+  it("should_return_false_when_absent_everywhere", () => {
+    assert.equal(estPresenteQuelquePart(personne("A", { mairie: false, soiree: false })), false);
+  });
+});
 
 describe("validerReponse", () => {
   it("should_return_no_error_when_answer_is_complete", () => {
-    const reponse = { presence: "oui", personnes: [{ nom: "Thierry", vegetarien: false }] };
-    assert.deepEqual(validerReponse(reponse), []);
+    const reponse = {
+      personnes: [personne("Thierry", { mairie: true, religieux: true, soiree: true }, { dessert: "velvet" })],
+    };
+    assert.deepEqual(validerReponse(reponse, TOUS), []);
   });
 
-  it("should_return_presence_error_when_presence_is_not_chosen", () => {
-    const reponse = { presence: "", personnes: [{ nom: "Thierry" }] };
-    assert.deepEqual(validerReponse(reponse), ["erreur-presence"]);
+  it("should_accept_a_person_absent_everywhere", () => {
+    const reponse = { personnes: [personne("Thierry", { mairie: false, religieux: false, soiree: false })] };
+    assert.deepEqual(validerReponse(reponse, TOUS), []);
   });
 
   it("should_return_name_error_when_a_name_is_blank", () => {
-    const reponse = { presence: "non", personnes: [{ nom: "Flauza" }, { nom: "   " }] };
-    assert.deepEqual(validerReponse(reponse), ["erreur-nom"]);
+    const reponse = {
+      personnes: [personne("Flauza", { soiree: false }), personne("   ", { soiree: false })],
+    };
+    assert.deepEqual(validerReponse(reponse, ["soiree"]), ["erreur-nom"]);
   });
 
   it("should_return_name_error_when_person_list_is_empty", () => {
-    assert.deepEqual(validerReponse({ presence: "oui", personnes: [] }), ["erreur-nom"]);
+    assert.deepEqual(validerReponse({ personnes: [] }, TOUS), ["erreur-nom"]);
   });
 
-  it("should_return_both_errors_when_nothing_is_filled", () => {
-    assert.deepEqual(validerReponse({ presence: "", personnes: [{ nom: "" }] }), [
-      "erreur-presence",
-      "erreur-nom",
-    ]);
+  it("should_return_dessert_error_when_present_at_reception_without_dessert", () => {
+    const reponse = { personnes: [personne("Thierry", { soiree: true })] };
+    assert.deepEqual(validerReponse(reponse, ["soiree"]), ["erreur-dessert"]);
+  });
+
+  it("should_return_dessert_error_when_dessert_is_unknown", () => {
+    const reponse = { personnes: [personne("Thierry", { soiree: true }, { dessert: "chocolat" })] };
+    assert.deepEqual(validerReponse(reponse, ["soiree"]), ["erreur-dessert"]);
+  });
+
+  it("should_not_require_dessert_when_absent_from_reception", () => {
+    const reponse = { personnes: [personne("Thierry", { religieux: true, soiree: false })] };
+    assert.deepEqual(validerReponse(reponse, ["religieux", "soiree"]), []);
+  });
+
+  it("should_not_require_dessert_when_reception_is_not_in_invitation", () => {
+    const reponse = { personnes: [personne("Thierry", { mairie: true, soiree: true })] };
+    assert.deepEqual(validerReponse(reponse, ["mairie"]), []);
+  });
+
+  it("should_return_both_errors_when_name_and_dessert_are_missing", () => {
+    const reponse = { personnes: [personne("", { soiree: true })] };
+    assert.deepEqual(validerReponse(reponse, ["soiree"]), ["erreur-nom", "erreur-dessert"]);
   });
 });
 
 describe("construireEnvoi", () => {
-  it("should_trim_names_and_keep_vegetarian_choice_when_present", () => {
+  it("should_trim_names_and_keep_choices_when_present", () => {
     const reponse = {
-      presence: "oui",
       personnes: [
-        { nom: "  Thierry ", vegetarien: true },
-        { nom: "Flauza", vegetarien: false },
+        personne("  Thierry ", { religieux: true, soiree: true }, { vegetarien: true, dessert: "pistache" }),
+        personne("Flauza", { religieux: false, soiree: true }, { dessert: "exotique" }),
       ],
       site: "",
     };
-    assert.deepEqual(construireEnvoi("abc123", "ta", reponse), {
+    assert.deepEqual(construireEnvoi("abc123", "ta", reponse, ["religieux", "soiree"]), {
       code: "abc123",
       langue: "ta",
-      presence: "oui",
       personnes: [
-        { nom: "Thierry", vegetarien: true },
-        { nom: "Flauza", vegetarien: false },
+        { nom: "Thierry", presences: { religieux: true, soiree: true }, vegetarien: true, dessert: "pistache" },
+        { nom: "Flauza", presences: { religieux: false, soiree: true }, vegetarien: false, dessert: "exotique" },
       ],
       site: "",
     });
   });
 
-  it("should_force_vegetarian_to_false_when_declining", () => {
-    const reponse = { presence: "non", personnes: [{ nom: "Thierry", vegetarien: true }] };
-    assert.equal(construireEnvoi("abc123", "fr", reponse).personnes[0].vegetarien, false);
+  it("should_keep_only_events_of_the_invitation", () => {
+    const reponse = { personnes: [personne("Thierry", { mairie: true, soiree: true }, { dessert: "velvet" })] };
+    assert.deepEqual(construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0].presences, {
+      soiree: true,
+    });
+  });
+
+  it("should_mark_missing_events_as_absent", () => {
+    const reponse = { personnes: [personne("Thierry", {})] };
+    assert.deepEqual(construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0].presences, {
+      soiree: false,
+    });
+  });
+
+  it("should_clear_vegetarian_and_dessert_when_absent_everywhere", () => {
+    const reponse = {
+      personnes: [personne("Thierry", { soiree: false }, { vegetarien: true, dessert: "velvet" })],
+    };
+    const envoye = construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0];
+    assert.equal(envoye.vegetarien, false);
+    assert.equal(envoye.dessert, "");
+  });
+
+  it("should_clear_dessert_but_keep_vegetarian_when_absent_from_reception_only", () => {
+    const reponse = {
+      personnes: [
+        personne("Thierry", { religieux: true, soiree: false }, { vegetarien: true, dessert: "velvet" }),
+      ],
+    };
+    const envoye = construireEnvoi("abc123", "fr", reponse, ["religieux", "soiree"]).personnes[0];
+    assert.equal(envoye.vegetarien, true);
+    assert.equal(envoye.dessert, "");
   });
 
   it("should_send_empty_honeypot_when_field_is_absent", () => {
-    const reponse = { presence: "non", personnes: [{ nom: "Thierry" }] };
-    assert.equal(construireEnvoi("abc123", "fr", reponse).site, "");
+    const reponse = { personnes: [personne("Thierry", { soiree: false })] };
+    assert.equal(construireEnvoi("abc123", "fr", reponse, ["soiree"]).site, "");
   });
 });

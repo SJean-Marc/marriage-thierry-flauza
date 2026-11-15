@@ -436,66 +436,41 @@ h2::after {
 /* --- Formulaire de présence --- */
 
 #formulaire-rsvp {
-  max-width: 560px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
-fieldset {
-  margin: 0 0 20px;
-  padding: 0;
-  border: 0;
+.rsvp-aide {
+  color: var(--texte-doux);
+  font-style: italic;
 }
 
-.presence {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: stretch;
+.tableau-presence {
+  width: 100%;
+  margin: 0 0 12px;
+  border-collapse: collapse;
 }
 
-.presence label {
-  padding: 12px 16px;
-  border: 1px solid var(--or-clair);
-  border-radius: 12px;
-  background: var(--fond-clair);
-  text-align: left;
-  cursor: pointer;
-}
-
-.presence label:has(input:checked) {
-  border-color: var(--bordeaux);
-  box-shadow: 0 0 0 1px var(--bordeaux);
-}
-
-.presence input,
-.vegetarien input {
-  accent-color: var(--bordeaux);
-}
-
-legend {
-  margin: 0 auto 12px;
+.tableau-presence th {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--or);
   color: var(--bordeaux);
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
-#liste-personnes {
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
+.tableau-presence td {
+  padding: 8px;
+  border-bottom: 1px solid var(--or-clair);
+  text-align: center;
+  vertical-align: middle;
 }
 
-.personne {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 10px;
-}
-
-.personne input[type="text"] {
-  flex: 1 1 200px;
+.personne input[type="text"],
+.personne select {
+  width: 100%;
   min-width: 0;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--or-clair);
   border-radius: 10px;
   background: #fff;
@@ -503,13 +478,96 @@ legend {
   font: inherit;
 }
 
-.personne input[type="text"]:focus {
+.cellule-nom {
+  min-width: 180px;
+}
+
+.personne input[type="text"]:focus,
+.personne select:focus {
   outline: 2px solid var(--bordeaux);
   outline-offset: 1px;
 }
 
-.absent .vegetarien {
-  display: none;
+.personne select:disabled {
+  opacity: 0.45;
+}
+
+.cellule-vegetarien input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--bordeaux);
+}
+
+.bascule-presence {
+  min-width: 92px;
+  padding: 6px 14px;
+  border: 1px solid #1e6b34;
+  border-radius: 999px;
+  background: #e5f3e8;
+  color: #1e6b34;
+  font: 600 1rem var(--police-titre);
+  cursor: pointer;
+}
+
+.bascule-presence.absent {
+  border-color: #a3122a;
+  background: #fbe9eb;
+  color: #a3122a;
+}
+
+/* Mobile : chaque personne devient une carte, chaque cellule une ligne « intitulé : valeur ». */
+@media (max-width: 760px) {
+  .tableau-presence thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tableau-presence,
+  .tableau-presence tbody,
+  .tableau-presence tr,
+  .tableau-presence td {
+    display: block;
+  }
+
+  .personne {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--or-clair);
+    border-radius: 14px;
+    background: var(--fond-clair);
+  }
+
+  .tableau-presence td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .tableau-presence td[data-label]::before {
+    content: attr(data-label);
+    color: var(--bordeaux);
+    font-weight: 600;
+  }
+
+  .cellule-nom {
+    min-width: 0;
+  }
+
+  .cellule-dessert select {
+    width: auto;
+    max-width: 60%;
+  }
+
+  .cellule-retirer {
+    justify-content: flex-end;
+  }
 }
 
 .piege {
@@ -543,26 +601,6 @@ legend {
   align-items: center;
   gap: 14px;
   margin-top: 24px;
-}
-
-.wero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 22px;
-  border: 1px solid var(--or-clair);
-  border-radius: 16px;
-  background: var(--fond-clair);
-}
-
-.wero-numero {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--bordeaux);
-  font-size: 1.3rem;
-  user-select: all;
 }
 
 /* --- Pied de page --- */

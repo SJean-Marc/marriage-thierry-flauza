@@ -1,5 +1,6 @@
 // Script Google Apps Script lié à la Google Sheet des réponses.
-// - doPost : enregistre les réponses au formulaire de présence (une ligne par personne).
+// - doPost : enregistre les réponses au formulaire de présence (une ligne par personne,
+//            une colonne par événement : « présent », « absent », ou vide si non invité).
 // - doGet  : fournit les lieux de la version d'invitation, seulement après la date de révélation.
 //
 // Propriétés du script (Paramètres du projet > Propriétés du script) :
@@ -15,8 +16,28 @@ const EVENEMENTS = {
   C: ["soiree"],
 };
 
+const COLONNES_EVENEMENTS = ["mairie", "religieux", "soiree"];
+const EVENEMENT_DESSERT = "soiree";
+// Doit rester identique à DESSERTS (js/rsvp.js).
+const DESSERTS = {
+  velvet: "Velvet fruits rouges",
+  pistache: "Pistache fruits rouges",
+  exotique: "Fruits exotiques",
+};
+
 const NOM_FEUILLE = "Réponses";
-const ENTETES = ["Horodatage", "Réponse n°", "Version", "Langue", "Présence", "Nom", "Végétarien"];
+const ENTETES = [
+  "Horodatage",
+  "Réponse n°",
+  "Version",
+  "Langue",
+  "Nom",
+  "Mairie",
+  "Religieux",
+  "Soirée",
+  "Végétarien",
+  "Dessert",
+];
 const LANGUES = ["fr", "ta"];
 const MAX_PERSONNES = 20;
 const MAX_LONGUEUR_NOM = 100;
@@ -68,12 +89,11 @@ function doPost(e) {
 }
 
 function validerEnvoi(donnees) {
-  if (!CODES[donnees.code]) {
+  const version = CODES[donnees.code];
+  if (!version) {
     return "invitation-invalide";
   }
-  if (donnees.presence !== "oui" && donnees.presence !== "non") {
-    return "presence-invalide";
-  }
+  const evenements = EVENEMENTS[version];
   const personnes = donnees.personnes;
   const personnesValides =
     Array.isArray(personnes) &&
@@ -82,12 +102,38 @@ function validerEnvoi(donnees) {
     personnes.every(function (personne) {
       return (
         personne !== null &&
+        typeof personne === "object" &&
         typeof personne.nom === "string" &&
         personne.nom.trim() !== "" &&
-        personne.nom.length <= MAX_LONGUEUR_NOM
+        personne.nom.length <= MAX_LONGUEUR_NOM &&
+        presencesValides(personne.presences, evenements)
       );
     });
-  return personnesValides ? null : "personnes-invalides";
+  if (!personnesValides) {
+    return "personnes-invalides";
+  }
+  const dessertManquant = personnes.some(function (personne) {
+    return choisitUnDessert(personne, evenements) && !estUnDessert(personne.dessert);
+  });
+  return dessertManquant ? "dessert-invalide" : null;
+}
+
+function presencesValides(presences, evenements) {
+  return (
+    presences !== null &&
+    typeof presences === "object" &&
+    evenements.every(function (cle) {
+      return typeof presences[cle] === "boolean";
+    })
+  );
+}
+
+function choisitUnDessert(personne, evenements) {
+  return evenements.indexOf(EVENEMENT_DESSERT) >= 0 && personne.presences[EVENEMENT_DESSERT] === true;
+}
+
+function estUnDessert(dessert) {
+  return typeof dessert === "string" && Object.prototype.hasOwnProperty.call(DESSERTS, dessert);
 }
 
 function enregistrer(donnees) {
@@ -98,17 +144,26 @@ function enregistrer(donnees) {
     const horodatage = new Date();
     const numero = Utilities.getUuid().slice(0, 8);
     const version = CODES[donnees.code];
+    const evenements = EVENEMENTS[version];
     const langue = LANGUES.indexOf(donnees.langue) >= 0 ? donnees.langue : "fr";
     const lignes = donnees.personnes.map(function (personne) {
+      const presences = COLONNES_EVENEMENTS.map(function (cle) {
+        if (evenements.indexOf(cle) < 0) {
+          return "";
+        }
+        return personne.presences[cle] ? "présent" : "absent";
+      });
+      const vientQuelquePart = presences.indexOf("présent") >= 0;
       return [
         horodatage,
         numero,
         version,
         langue,
-        donnees.presence,
         neutraliserFormule(personne.nom.trim()),
-        personne.vegetarien === true ? "oui" : "non",
-      ];
+      ].concat(presences, [
+        vientQuelquePart && personne.vegetarien === true ? "oui" : "non",
+        choisitUnDessert(personne, evenements) ? DESSERTS[personne.dessert] : "",
+      ]);
     });
     feuille.getRange(feuille.getLastRow() + 1, 1, lignes.length, ENTETES.length).setValues(lignes);
   } finally {

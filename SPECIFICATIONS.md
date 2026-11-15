@@ -65,16 +65,20 @@ Date limite de réponse : **28 janvier 2027**.
 - Après la révélation : adresse complète, liens Google Maps et Waze.
 
 ### 3.3 Confirmation de présence → Google Sheets
-- Formulaire : liste des personnes qui viennent (ajout/suppression de lignes), et pour chaque personne :
+- Formulaire en tableau : une ligne par personne (ajout/suppression de lignes), une colonne par événement **de l'invitation** (version A, B ou C). Pour chaque personne :
   - nom et prénom ;
-  - case « végétarien ».
+  - pour chaque événement, un bouton « Présent » (vert, par défaut) qui devient « Absent » quand on le touche ;
+  - case « végétarien » ;
+  - choix du dessert pour la soirée : velvet fruits rouges, pistache fruits rouges ou fruits exotiques (obligatoire si la personne vient à la soirée).
+- Sur mobile, le tableau s'affiche en cartes (une par personne).
 - Envoi vers une **Google Sheet** via un **Google Apps Script** publié en application web (gratuit, aucun serveur à gérer).
-- Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, végétarien.
+- Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, une colonne par événement (« présent », « absent », ou vide si non invité), végétarien, dessert.
+- Le script vérifie que les présences correspondent aux événements de la version et que le dessert est valide.
 - Message de confirmation après l'envoi, et indication de la date limite du 28/01/2027.
 - Anti-spam léger : champ piège invisible (*honeypot*), refus des envois vides.
 
 ### 3.4 Cagnotte
-- Rubrique « Cagnotte » : numéro Wero (bouton copier), boutons Lydia et PayPal. Valeurs provisoires dans `js/config.js`.
+- Rubrique « Cagnotte » : boutons Lydia et PayPal (aucun numéro de téléphone affiché). Valeurs provisoires dans `js/config.js`.
 
 ### 3.5 Photos & vidéos (pCloud)
 - Bouton « Voir les photos et vidéos » → lien de partage pCloud.
@@ -111,7 +115,7 @@ Date limite de réponse : **28 janvier 2027**.
 
 ## 6. Points à valider
 - [ ] Date de révélation des adresses (provisoire : 01/03/2027).
-- [x] Cagnotte : Wero + Lydia + PayPal (numéro et liens provisoires).
+- [x] Cagnotte : Lydia + PayPal (liens provisoires), numéro Wero retiré.
 - [x] Formulaire : réponse « nous ne pourrons pas venir » possible.
 - [ ] Formulaire : ajouter un téléphone ou un e-mail de contact, ou un message libre ?
 - [x] Faire-part : trois QR codes, un par version.

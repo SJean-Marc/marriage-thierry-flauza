@@ -1,7 +1,7 @@
 import { CONFIG } from "./config.js";
 import { formaterDate, langueInitiale, traduire } from "./i18n.js";
 import { evenementVedette, evenementsDeLaVersion, lireInvitation } from "./invitation.js";
-import { construireEnvoi, validerReponse } from "./rsvp.js";
+import { DESSERTS, EVENEMENT_DESSERT, construireEnvoi, estPresenteQuelquePart, validerReponse } from "./rsvp.js";
 
 const CLE_LANGUE = "langue";
 
@@ -22,9 +22,12 @@ const ARCHE_SVG =
   `<path class="arche-interieur" d="${cheminArche(ARCHE_LARGEUR - 14, ARCHE_HAUTEUR - 14)}" transform="translate(7 9)"/>` +
   `</svg>`;
 
+const invitation = lireInvitation(window.location.search, CONFIG.versions);
+
 const etat = {
   langue: langueInitiale(lireLangueMemorisee(), new URLSearchParams(window.location.search).get("lang")),
-  invitation: lireInvitation(window.location.search, CONFIG.versions),
+  invitation,
+  evenements: invitation ? evenementsDeLaVersion(invitation.version, CONFIG.evenementsParVersion) : [],
   lieux: null,
 };
 
@@ -65,6 +68,9 @@ function appliquerTextes() {
   document.querySelectorAll("[data-i18n]").forEach((noeud) => {
     noeud.textContent = t(noeud.dataset.i18n);
   });
+  document.querySelectorAll("[data-i18n-label]").forEach((noeud) => {
+    noeud.dataset.label = t(noeud.dataset.i18nLabel);
+  });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((champ) => {
     champ.placeholder = t(champ.dataset.i18nPlaceholder);
     champ.setAttribute("aria-label", champ.placeholder);
@@ -75,7 +81,6 @@ function appliquerTextes() {
   document.getElementById("rsvp-limite").textContent = t("rsvp-limite", {
     date: formaterDate(CONFIG.dateLimiteReponse, etat.langue),
   });
-  mettreAJourLegendePersonnes();
   afficherEvenements();
 }
 
@@ -121,9 +126,8 @@ function afficherEvenements() {
     return;
   }
   const conteneur = document.getElementById("cartes-evenements");
-  const evenements = evenementsDeLaVersion(etat.invitation.version, CONFIG.evenementsParVersion);
-  const vedette = evenementVedette(evenements);
-  const cartes = evenements.map(
+  const vedette = evenementVedette(etat.evenements);
+  const cartes = etat.evenements.map(
     (cle) => {
       const carte = element("article", `carte carte-${cle}${cle === vedette ? " vedette" : ""}`);
       carte.innerHTML = ARCHE_SVG;
@@ -159,23 +163,83 @@ async function chargerLieux() {
 }
 
 // --- Formulaire de présence ---
+// Tableau : une ligne par personne, une colonne par événement de l'invitation,
+// puis « végétarien » et le choix du dessert (pour la soirée).
 
-function presenceChoisie() {
-  return document.querySelector('input[name="presence"]:checked')?.value ?? "";
+function aLeDessert() {
+  return etat.evenements.includes(EVENEMENT_DESSERT);
 }
 
-function mettreAJourLegendePersonnes() {
-  const presence = presenceChoisie();
-  document.getElementById("legende-personnes").textContent = t(
-    presence === "non" ? "rsvp-personnes-non" : "rsvp-personnes-oui",
+function celluleTraduite(balise, cle, classe) {
+  const cellule = element(balise, classe, t(cle));
+  cellule.dataset.i18n = cle;
+  return cellule;
+}
+
+function construireEntete() {
+  const entete = document.getElementById("entete-presence");
+  entete.append(
+    celluleTraduite("th", "rsvp-nom"),
+    ...etat.evenements.map((cle) => celluleTraduite("th", `evt-${cle}-court`)),
+    celluleTraduite("th", "rsvp-vegetarien"),
   );
-  document.getElementById("bloc-personnes").hidden = presence === "";
-  document.getElementById("formulaire-rsvp").classList.toggle("absent", presence === "non");
+  if (aLeDessert()) {
+    entete.append(celluleTraduite("th", "rsvp-dessert"));
+  }
+  entete.append(element("th"));
+  entete.querySelectorAll("th").forEach((th) => th.setAttribute("scope", "col"));
+}
+
+// Cellule avec intitulé : l'intitulé s'affiche sur mobile, où le tableau devient une liste de cartes.
+function celluleAvecIntitule(cle, classe) {
+  const cellule = element("td", classe);
+  cellule.dataset.i18nLabel = cle;
+  cellule.dataset.label = t(cle);
+  return cellule;
+}
+
+function definirPresence(bascule, presente) {
+  const cle = presente ? "rsvp-present" : "rsvp-absent";
+  bascule.setAttribute("aria-pressed", String(presente));
+  bascule.classList.toggle("absent", !presente);
+  bascule.dataset.i18n = cle;
+  bascule.textContent = t(cle);
+}
+
+function creerBascule(cle, choixDessert) {
+  const bascule = element("button", "bascule-presence");
+  bascule.type = "button";
+  bascule.dataset.evenement = cle;
+  definirPresence(bascule, true);
+  bascule.addEventListener("click", () => {
+    const presente = bascule.getAttribute("aria-pressed") !== "true";
+    definirPresence(bascule, presente);
+    if (cle === EVENEMENT_DESSERT && choixDessert) {
+      choixDessert.disabled = !presente;
+    }
+  });
+  return bascule;
+}
+
+function creerChoixDessert() {
+  const choix = element("select");
+  choix.name = "dessert";
+  choix.setAttribute("aria-label", t("rsvp-dessert"));
+  const options = ["", ...DESSERTS].map((dessert) => {
+    const option = element("option");
+    option.value = dessert;
+    option.dataset.i18n = dessert ? `dessert-${dessert}` : "rsvp-dessert-choisir";
+    option.textContent = t(option.dataset.i18n);
+    return option;
+  });
+  choix.append(...options);
+  return choix;
 }
 
 function ajouterPersonne() {
   const liste = document.getElementById("liste-personnes");
-  const ligne = element("li", "personne");
+  const ligne = element("tr", "personne");
+
   const nom = element("input");
   nom.type = "text";
   nom.name = "nom";
@@ -183,25 +247,42 @@ function ajouterPersonne() {
   nom.dataset.i18nPlaceholder = "rsvp-nom";
   nom.placeholder = t("rsvp-nom");
   nom.setAttribute("aria-label", t("rsvp-nom"));
+  const celluleNom = element("td", "cellule-nom");
+  celluleNom.append(nom);
+  ligne.append(celluleNom);
 
-  const vegetarien = element("label", "vegetarien");
+  const choixDessert = aLeDessert() ? creerChoixDessert() : null;
+  etat.evenements.forEach((cle) => {
+    const cellule = celluleAvecIntitule(`evt-${cle}-court`, "cellule-evenement");
+    cellule.append(creerBascule(cle, choixDessert));
+    ligne.append(cellule);
+  });
+
   const caseVegetarien = element("input");
   caseVegetarien.type = "checkbox";
   caseVegetarien.name = "vegetarien";
-  const libelle = element("span", "", t("rsvp-vegetarien"));
-  libelle.dataset.i18n = "rsvp-vegetarien";
-  vegetarien.append(caseVegetarien, " ", libelle);
+  caseVegetarien.setAttribute("aria-label", t("rsvp-vegetarien"));
+  const celluleVegetarien = celluleAvecIntitule("rsvp-vegetarien", "cellule-vegetarien");
+  celluleVegetarien.append(caseVegetarien);
+  ligne.append(celluleVegetarien);
 
-  const retirer = element("button", "retirer", t("rsvp-retirer"));
+  if (choixDessert) {
+    const celluleDessert = celluleAvecIntitule("rsvp-dessert", "cellule-dessert");
+    celluleDessert.append(choixDessert);
+    ligne.append(celluleDessert);
+  }
+
+  const retirer = celluleTraduite("button", "rsvp-retirer", "retirer");
   retirer.type = "button";
-  retirer.dataset.i18n = "rsvp-retirer";
   retirer.addEventListener("click", () => {
     if (liste.children.length > 1) {
       ligne.remove();
     }
   });
+  const celluleRetirer = element("td", "cellule-retirer");
+  celluleRetirer.append(retirer);
+  ligne.append(celluleRetirer);
 
-  ligne.append(nom, vegetarien, retirer);
   liste.append(ligne);
   nom.focus();
 }
@@ -209,9 +290,16 @@ function ajouterPersonne() {
 function lireReponse(formulaire) {
   const personnes = [...document.querySelectorAll("#liste-personnes .personne")].map((ligne) => ({
     nom: ligne.querySelector('input[name="nom"]').value,
+    presences: Object.fromEntries(
+      [...ligne.querySelectorAll(".bascule-presence")].map((bascule) => [
+        bascule.dataset.evenement,
+        bascule.getAttribute("aria-pressed") === "true",
+      ]),
+    ),
     vegetarien: ligne.querySelector('input[name="vegetarien"]').checked,
+    dessert: ligne.querySelector('select[name="dessert"]')?.value ?? "",
   }));
-  return { presence: presenceChoisie(), personnes, site: formulaire.elements.site.value };
+  return { personnes, site: formulaire.elements.site.value };
 }
 
 function afficherMessage(cles, type) {
@@ -224,7 +312,7 @@ async function envoyerReponse(evenement) {
   evenement.preventDefault();
   const formulaire = evenement.currentTarget;
   const reponse = lireReponse(formulaire);
-  const erreurs = validerReponse(reponse);
+  const erreurs = validerReponse(reponse, etat.evenements);
   if (erreurs.length > 0) {
     afficherMessage(erreurs, "erreur");
     return;
@@ -237,15 +325,17 @@ async function envoyerReponse(evenement) {
   bouton.disabled = true;
   bouton.textContent = t("rsvp-envoi");
   try {
+    const envoi = construireEnvoi(etat.invitation.code, etat.langue, reponse, etat.evenements);
     const resultat = await fetch(CONFIG.urlScript, {
       method: "POST",
-      body: JSON.stringify(construireEnvoi(etat.invitation.code, etat.langue, reponse)),
+      body: JSON.stringify(envoi),
     }).then((r) => r.json());
     if (!resultat.ok) {
       throw new Error(resultat.erreur);
     }
+    const viennent = envoi.personnes.some(estPresenteQuelquePart);
     formulaire.replaceChildren(
-      element("p", "message succes", t(reponse.presence === "oui" ? "rsvp-merci-oui" : "rsvp-merci-non")),
+      element("p", "message succes", t(viennent ? "rsvp-merci-oui" : "rsvp-merci-non")),
     );
   } catch {
     afficherMessage(["erreur-envoi"], "erreur");
@@ -255,36 +345,19 @@ async function envoyerReponse(evenement) {
 }
 
 function initialiserFormulaire() {
-  const formulaire = document.getElementById("formulaire-rsvp");
-  formulaire.querySelectorAll('input[name="presence"]').forEach((radio) => {
-    radio.addEventListener("change", mettreAJourLegendePersonnes);
-  });
+  construireEntete();
   document.getElementById("ajouter-personne").addEventListener("click", ajouterPersonne);
-  formulaire.addEventListener("submit", envoyerReponse);
+  document.getElementById("formulaire-rsvp").addEventListener("submit", envoyerReponse);
   ajouterPersonne();
 }
 
 // --- Cagnotte & photos ---
 
 function initialiserLiens() {
-  document.getElementById("wero-telephone").textContent = CONFIG.cagnotte.weroTelephone;
   document.getElementById("lien-lydia").href = CONFIG.cagnotte.lydia;
   document.getElementById("lien-paypal").href = CONFIG.cagnotte.paypal;
   document.getElementById("lien-photos-voir").href = CONFIG.photos.voir;
   document.getElementById("lien-photos-deposer").href = CONFIG.photos.deposer;
-
-  const copier = document.getElementById("copier-wero");
-  copier.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(CONFIG.cagnotte.weroTelephone.replace(/\s/g, ""));
-      copier.textContent = t("cagnotte-copie");
-      setTimeout(() => {
-        copier.textContent = t("cagnotte-copier");
-      }, 2000);
-    } catch {
-      // Presse-papiers refusé : le numéro reste affiché et sélectionnable.
-    }
-  });
 }
 
 // --- Démarrage ---
