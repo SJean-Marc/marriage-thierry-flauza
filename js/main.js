@@ -1,7 +1,14 @@
 import { CONFIG } from "./config.js";
 import { formaterDate, langueInitiale, traduire } from "./i18n.js";
 import { evenementVedette, evenementsDeLaVersion, lireInvitation } from "./invitation.js";
-import { DESSERTS, EVENEMENT_DESSERT, construireEnvoi, estPresenteQuelquePart, validerReponse } from "./rsvp.js";
+import {
+  DESSERTS,
+  EVENEMENT_DESSERT,
+  champsInvalides,
+  construireEnvoi,
+  estPresenteQuelquePart,
+  validerReponse,
+} from "./rsvp.js";
 
 const CLE_LANGUE = "langue";
 
@@ -67,9 +74,6 @@ function appliquerTextes() {
   document.title = t("titre-page");
   document.querySelectorAll("[data-i18n]").forEach((noeud) => {
     noeud.textContent = t(noeud.dataset.i18n);
-  });
-  document.querySelectorAll("[data-i18n-label]").forEach((noeud) => {
-    noeud.dataset.label = t(noeud.dataset.i18nLabel);
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((champ) => {
     champ.placeholder = t(champ.dataset.i18nPlaceholder);
@@ -163,137 +167,127 @@ async function chargerLieux() {
 }
 
 // --- Formulaire de présence ---
-// Tableau : une ligne par personne, une colonne par événement de l'invitation,
+// Une carte par personne : nom, une ligne « Présent | Absent » par événement de l'invitation,
 // puis « végétarien » et le choix du dessert (pour la soirée).
+
+let compteurPersonnes = 0;
 
 function aLeDessert() {
   return etat.evenements.includes(EVENEMENT_DESSERT);
 }
 
-function celluleTraduite(balise, cle, classe) {
-  const cellule = element(balise, classe, t(cle));
-  cellule.dataset.i18n = cle;
-  return cellule;
+function texteTraduit(balise, cle, classe) {
+  const noeud = element(balise, classe, t(cle));
+  noeud.dataset.i18n = cle;
+  return noeud;
 }
 
-function construireEntete() {
-  const entete = document.getElementById("entete-presence");
-  entete.append(
-    celluleTraduite("th", "rsvp-nom"),
-    ...etat.evenements.map((cle) => celluleTraduite("th", `evt-${cle}-court`)),
-    celluleTraduite("th", "rsvp-vegetarien"),
-  );
-  if (aLeDessert()) {
-    entete.append(celluleTraduite("th", "rsvp-dessert"));
-  }
-  entete.append(element("th"));
-  entete.querySelectorAll("th").forEach((th) => th.setAttribute("scope", "col"));
-}
+// Choix segmenté : deux boutons radio stylés, « Présent » coché par défaut.
+function creerChoixPresence(idPersonne, cle, choixDessert) {
+  const groupe = element("div", "champ champ-presence");
+  groupe.setAttribute("role", "radiogroup");
+  const intitule = texteTraduit("span", `evt-${cle}-court`, "intitule");
+  intitule.id = `${idPersonne}-${cle}`;
+  groupe.setAttribute("aria-labelledby", intitule.id);
 
-// Cellule avec intitulé : l'intitulé s'affiche sur mobile, où le tableau devient une liste de cartes.
-function celluleAvecIntitule(cle, classe) {
-  const cellule = element("td", classe);
-  cellule.dataset.i18nLabel = cle;
-  cellule.dataset.label = t(cle);
-  return cellule;
-}
-
-function definirPresence(bascule, presente) {
-  const cle = presente ? "rsvp-present" : "rsvp-absent";
-  bascule.setAttribute("aria-pressed", String(presente));
-  bascule.classList.toggle("absent", !presente);
-  bascule.dataset.i18n = cle;
-  bascule.textContent = t(cle);
-}
-
-function creerBascule(cle, choixDessert) {
-  const bascule = element("button", "bascule-presence");
-  bascule.type = "button";
-  bascule.dataset.evenement = cle;
-  definirPresence(bascule, true);
-  bascule.addEventListener("click", () => {
-    const presente = bascule.getAttribute("aria-pressed") !== "true";
-    definirPresence(bascule, presente);
+  const segmente = element("div", "segmente");
+  [
+    ["present", "rsvp-present"],
+    ["absent", "rsvp-absent"],
+  ].forEach(([valeur, cleTexte]) => {
+    const option = element("label", `option-${valeur}`);
+    const radio = element("input");
+    radio.type = "radio";
+    radio.name = `${idPersonne}-${cle}`;
+    radio.value = valeur;
+    radio.dataset.evenement = cle;
+    radio.checked = valeur === "present";
     if (cle === EVENEMENT_DESSERT && choixDessert) {
-      choixDessert.disabled = !presente;
+      radio.addEventListener("change", () => {
+        choixDessert.disabled = valeur === "absent";
+      });
     }
+    option.append(radio, texteTraduit("span", cleTexte));
+    segmente.append(option);
   });
-  return bascule;
+
+  groupe.append(intitule, segmente);
+  return groupe;
 }
 
 function creerChoixDessert() {
   const choix = element("select");
   choix.name = "dessert";
-  choix.setAttribute("aria-label", t("rsvp-dessert"));
   const options = ["", ...DESSERTS].map((dessert) => {
-    const option = element("option");
+    const option = texteTraduit("option", dessert ? `dessert-${dessert}` : "rsvp-dessert-choisir");
     option.value = dessert;
-    option.dataset.i18n = dessert ? `dessert-${dessert}` : "rsvp-dessert-choisir";
-    option.textContent = t(option.dataset.i18n);
     return option;
   });
   choix.append(...options);
   return choix;
 }
 
+function champAvecLibelle(cleLibelle, controle, classe) {
+  const champ = element("label", `champ ${classe}`);
+  champ.append(texteTraduit("span", cleLibelle, "intitule"), controle);
+  return champ;
+}
+
 function ajouterPersonne() {
   const liste = document.getElementById("liste-personnes");
-  const ligne = element("tr", "personne");
+  compteurPersonnes += 1;
+  const idPersonne = `personne-${compteurPersonnes}`;
+  const ligne = element("li", "personne");
 
-  const nom = element("input");
+  const nom = element("input", "champ-nom");
   nom.type = "text";
   nom.name = "nom";
   nom.autocomplete = "name";
   nom.dataset.i18nPlaceholder = "rsvp-nom";
   nom.placeholder = t("rsvp-nom");
   nom.setAttribute("aria-label", t("rsvp-nom"));
-  const celluleNom = element("td", "cellule-nom");
-  celluleNom.append(nom);
-  ligne.append(celluleNom);
+  ligne.append(nom);
 
   const choixDessert = aLeDessert() ? creerChoixDessert() : null;
-  etat.evenements.forEach((cle) => {
-    const cellule = celluleAvecIntitule(`evt-${cle}-court`, "cellule-evenement");
-    cellule.append(creerBascule(cle, choixDessert));
-    ligne.append(cellule);
-  });
+  etat.evenements.forEach((cle) => ligne.append(creerChoixPresence(idPersonne, cle, choixDessert)));
 
   const caseVegetarien = element("input");
   caseVegetarien.type = "checkbox";
   caseVegetarien.name = "vegetarien";
-  caseVegetarien.setAttribute("aria-label", t("rsvp-vegetarien"));
-  const celluleVegetarien = celluleAvecIntitule("rsvp-vegetarien", "cellule-vegetarien");
-  celluleVegetarien.append(caseVegetarien);
-  ligne.append(celluleVegetarien);
+  ligne.append(champAvecLibelle("rsvp-vegetarien", caseVegetarien, "champ-vegetarien"));
 
   if (choixDessert) {
-    const celluleDessert = celluleAvecIntitule("rsvp-dessert", "cellule-dessert");
-    celluleDessert.append(choixDessert);
-    ligne.append(celluleDessert);
+    ligne.append(champAvecLibelle("rsvp-dessert", choixDessert, "champ-dessert"));
   }
 
-  const retirer = celluleTraduite("button", "rsvp-retirer", "retirer");
+  const retirer = texteTraduit("button", "rsvp-retirer", "retirer");
   retirer.type = "button";
   retirer.addEventListener("click", () => {
     if (liste.children.length > 1) {
       ligne.remove();
     }
   });
-  const celluleRetirer = element("td", "cellule-retirer");
-  celluleRetirer.append(retirer);
-  ligne.append(celluleRetirer);
+  ligne.append(retirer);
+
+  // Un champ signalé en erreur redevient neutre dès que l'invité le modifie.
+  ligne.addEventListener("input", (evenement) => evenement.target.removeAttribute("aria-invalid"));
+  ligne.addEventListener("change", (evenement) => evenement.target.removeAttribute("aria-invalid"));
 
   liste.append(ligne);
   return nom;
 }
 
+function lignesPersonnes() {
+  return [...document.querySelectorAll("#liste-personnes .personne")];
+}
+
 function lireReponse(formulaire) {
-  const personnes = [...document.querySelectorAll("#liste-personnes .personne")].map((ligne) => ({
+  const personnes = lignesPersonnes().map((ligne) => ({
     nom: ligne.querySelector('input[name="nom"]').value,
     presences: Object.fromEntries(
-      [...ligne.querySelectorAll(".bascule-presence")].map((bascule) => [
-        bascule.dataset.evenement,
-        bascule.getAttribute("aria-pressed") === "true",
+      [...ligne.querySelectorAll('input[type="radio"]:checked')].map((radio) => [
+        radio.dataset.evenement,
+        radio.value === "present",
       ]),
     ),
     vegetarien: ligne.querySelector('input[name="vegetarien"]').checked,
@@ -302,10 +296,20 @@ function lireReponse(formulaire) {
   return { personnes, site: formulaire.elements.site.value };
 }
 
+function signalerChamps(reponse) {
+  const lignes = lignesPersonnes();
+  const champs = champsInvalides(reponse, etat.evenements).map(({ index, champ }) =>
+    lignes[index].querySelector(`[name="${champ}"]`),
+  );
+  champs.forEach((champ) => champ.setAttribute("aria-invalid", "true"));
+  champs[0]?.focus();
+}
+
 function afficherMessage(cles, type) {
   const message = document.getElementById("message-rsvp");
   message.textContent = cles.map((cle) => t(cle)).join(" ");
   message.className = `message ${type}`;
+  message.setAttribute("role", type === "erreur" ? "alert" : "status");
 }
 
 async function envoyerReponse(evenement) {
@@ -315,6 +319,7 @@ async function envoyerReponse(evenement) {
   const erreurs = validerReponse(reponse, etat.evenements);
   if (erreurs.length > 0) {
     afficherMessage(erreurs, "erreur");
+    signalerChamps(reponse);
     return;
   }
   if (!CONFIG.urlScript) {
@@ -345,7 +350,6 @@ async function envoyerReponse(evenement) {
 }
 
 function initialiserFormulaire() {
-  construireEntete();
   // Focus seulement sur une ligne ajoutée par l'invité : au chargement, la page ne doit pas sauter au formulaire.
   document.getElementById("ajouter-personne").addEventListener("click", () => ajouterPersonne().focus());
   document.getElementById("formulaire-rsvp").addEventListener("submit", envoyerReponse);

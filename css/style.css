@@ -6,11 +6,14 @@
   --bordeaux-fonce: #5e0b1e;
   --or: #b8862f;
   --or-clair: #e2bf73;
+  --or-texte: #8a6a1f; /* or assombri pour le texte sur crème (contraste 4,8:1) ; --or reste pour les filets */
+  --brun-absent: #6b5646;
+  --erreur: #a3122a;
   --texte: #3b2a20;
   --texte-doux: #7a6250;
-  --police-titre: "Cormorant Garamond", Georgia, serif;
+  --police-titre: "Cormorant Garamond", "Noto Serif Tamil", Georgia, serif;
   --police-script: "Great Vibes", cursive;
-  --police-texte: "Cormorant Garamond", Georgia, serif;
+  --police-texte: "Cormorant Garamond", "Noto Serif Tamil", Georgia, serif;
 }
 
 *,
@@ -58,6 +61,20 @@ body {
   font-size: 1.1rem;
 }
 
+/* Noto Serif Tamil n'a pas d'italique : le navigateur le simulerait en penchant les lettres. */
+:lang(ta) .accueil-intro,
+:lang(ta) .rsvp-aide,
+:lang(ta) .lieu-masque,
+:lang(ta) .invitation-requise {
+  font-style: normal;
+}
+
+/* Focus visible au clavier sur tous les contrôles. */
+:focus-visible {
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 3px;
+}
+
 :lang(ta) .carte-heure {
   font-size: 1.3rem;
 }
@@ -86,7 +103,9 @@ body {
   background: transparent;
   color: var(--bordeaux);
   font: 600 0.95rem var(--police-titre);
-  padding: 4px 12px;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 6px 14px;
   border-radius: 999px;
   cursor: pointer;
 }
@@ -228,7 +247,7 @@ body {
 
 .accueil-dates {
   margin: 0;
-  color: var(--or);
+  color: var(--or-texte);
   font-family: var(--police-titre);
   font-size: 1.6rem;
   font-weight: 600;
@@ -345,7 +364,7 @@ h2::after {
 
 .carte-titre {
   margin: 8px 0 0;
-  color: var(--or);
+  color: var(--or-texte);
   font-family: var(--police-titre);
   font-weight: 600;
   font-size: 1.2rem;
@@ -366,7 +385,7 @@ h2::after {
 
 .carte-heure {
   margin: 0 0 10px;
-  color: var(--or);
+  color: var(--or-texte);
   font-weight: 700;
   font-size: 1.6rem;
 }
@@ -422,9 +441,9 @@ h2::after {
   cursor: wait;
 }
 
-.bouton-secondaire,
-.retirer {
-  padding: 6px 16px;
+.bouton-secondaire {
+  min-height: 44px;
+  padding: 8px 20px;
   border: 1px solid var(--or);
   border-radius: 999px;
   background: transparent;
@@ -445,129 +464,167 @@ h2::after {
   font-style: italic;
 }
 
-.tableau-presence {
-  width: 100%;
-  margin: 0 0 12px;
-  border-collapse: collapse;
+/* Une carte par personne ; deux côte à côte sur grand écran. */
+.liste-personnes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 420px));
+  justify-content: center;
+  gap: 16px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
 }
 
-.tableau-presence th {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--or);
+.personne {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid var(--or);
+  border-radius: 18px;
+  background: var(--fond-clair);
+  box-shadow: 0 6px 18px rgba(94, 11, 30, 0.06);
+  text-align: left;
+}
+
+.champ {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 52px;
+  padding: 4px 0;
+  border-top: 1px dotted var(--or-clair);
+}
+
+.intitule {
   color: var(--bordeaux);
   font-weight: 600;
-  font-size: 0.95rem;
 }
 
-.tableau-presence td {
-  padding: 8px;
-  border-bottom: 1px solid var(--or-clair);
-  text-align: center;
-  vertical-align: middle;
-}
-
-.personne input[type="text"],
+.champ-nom,
 .personne select {
-  width: 100%;
   min-width: 0;
+  min-height: 48px;
   padding: 10px 12px;
-  border: 1px solid var(--or-clair);
+  border: 1px solid var(--or);
   border-radius: 10px;
   background: #fff;
   color: var(--texte);
   font: inherit;
 }
 
-.cellule-nom {
-  min-width: 180px;
+.champ-nom {
+  width: 100%;
+  margin-bottom: 12px;
 }
 
-.personne input[type="text"]:focus,
-.personne select:focus {
-  outline: 2px solid var(--bordeaux);
-  outline-offset: 1px;
+.champ-nom::placeholder {
+  color: var(--texte-doux);
+  opacity: 1;
+}
+
+/* Le menu garde sa largeur naturelle ; s'il ne tient pas à côté de l'intitulé, il passe dessous. */
+.personne select {
+  max-width: 100%;
 }
 
 .personne select:disabled {
-  opacity: 0.45;
+  border-style: dashed;
+  background: transparent;
+  opacity: 0.55;
 }
 
-.cellule-vegetarien input {
-  width: 22px;
-  height: 22px;
-  accent-color: var(--bordeaux);
+[aria-invalid="true"] {
+  border-color: var(--erreur) !important;
+  box-shadow: 0 0 0 1px var(--erreur);
 }
 
-.bascule-presence {
-  min-width: 92px;
-  padding: 6px 14px;
-  border: 1px solid #1e6b34;
-  border-radius: 999px;
-  background: #e5f3e8;
-  color: #1e6b34;
-  font: 600 1rem var(--police-titre);
+.champ-vegetarien {
   cursor: pointer;
 }
 
-.bascule-presence.absent {
-  border-color: #a3122a;
-  background: #fbe9eb;
-  color: #a3122a;
+.champ-vegetarien input {
+  width: 28px;
+  height: 28px;
+  margin: 8px 0;
+  accent-color: var(--bordeaux);
 }
 
-/* Mobile : chaque personne devient une carte, chaque cellule une ligne « intitulé : valeur ». */
-@media (max-width: 760px) {
-  .tableau-presence thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
+/* Choix segmenté « Présent | Absent » : deux boutons radio, le choix actif est rempli. */
+.segmente {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 44px;
+  padding: 3px;
+  border: 1px solid var(--or);
+  border-radius: 999px;
+  background: #fff;
+}
 
-  .tableau-presence,
-  .tableau-presence tbody,
-  .tableau-presence tr,
-  .tableau-presence td {
-    display: block;
-  }
+.segmente label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: var(--texte-doux);
+  font: 600 1rem var(--police-titre);
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s, color 0.2s;
+}
 
-  .personne {
-    margin-bottom: 14px;
-    padding: 10px 14px;
-    border: 1px solid var(--or-clair);
-    border-radius: 14px;
-    background: var(--fond-clair);
-  }
+:lang(ta) .segmente label {
+  font-family: "Noto Serif Tamil", var(--police-titre);
+  font-size: 0.9rem;
+}
 
-  .tableau-presence td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 0;
-    border: 0;
-    text-align: left;
-  }
+.segmente input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
 
-  .tableau-presence td[data-label]::before {
-    content: attr(data-label);
-    color: var(--bordeaux);
-    font-weight: 600;
-  }
+.option-present:has(input:checked) {
+  background: var(--bordeaux);
+  color: var(--fond-clair);
+}
 
-  .cellule-nom {
-    min-width: 0;
-  }
+.option-absent:has(input:checked) {
+  background: var(--brun-absent);
+  color: var(--fond-clair);
+}
 
-  .cellule-dessert select {
-    width: auto;
-    max-width: 60%;
-  }
+.segmente label:has(input:focus-visible) {
+  outline: 2px solid var(--bordeaux);
+  outline-offset: 2px;
+}
 
-  .cellule-retirer {
-    justify-content: flex-end;
+@media (prefers-reduced-motion: reduce) {
+  .segmente label {
+    transition: none;
   }
+}
+
+/* « Retirer » discret, et masqué quand il ne reste qu'une personne (le clic serait sans effet). */
+.retirer {
+  align-self: flex-end;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--texte-doux);
+  font: 600 1rem var(--police-titre);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.personne:only-child .retirer {
+  display: none;
 }
 
 .piege {
@@ -575,12 +632,21 @@ h2::after {
   left: -9999px;
 }
 
-.message {
-  min-height: 1.5em;
+.message:empty {
+  margin: 0;
 }
 
 .message.erreur {
-  color: #a3122a;
+  max-width: 34rem;
+  margin: 16px auto;
+  padding: 12px 16px;
+  border: 1px solid var(--erreur);
+  border-left-width: 4px;
+  border-radius: 10px;
+  background: #fdf1f1;
+  color: #8a0f23;
+  font-weight: 600;
+  text-align: left;
 }
 
 .message.succes {

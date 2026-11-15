@@ -12,16 +12,27 @@ function choisitUnDessert(personne, evenements) {
   return evenements.includes(EVENEMENT_DESSERT) && personne.presences[EVENEMENT_DESSERT] === true;
 }
 
+// Champs à corriger, dans l'ordre du formulaire : [{ index, champ: "nom" | "dessert" }].
+export function champsInvalides(reponse, evenements) {
+  return reponse.personnes.flatMap((personne, index) => {
+    const champs = [];
+    if (personne.nom.trim() === "") {
+      champs.push({ index, champ: "nom" });
+    }
+    if (choisitUnDessert(personne, evenements) && !DESSERTS.includes(personne.dessert)) {
+      champs.push({ index, champ: "dessert" });
+    }
+    return champs;
+  });
+}
+
 export function validerReponse(reponse, evenements) {
+  const champs = champsInvalides(reponse, evenements).map((invalide) => invalide.champ);
   const erreurs = [];
-  const noms = reponse.personnes.map((personne) => personne.nom.trim());
-  if (noms.length === 0 || noms.some((nom) => nom === "")) {
+  if (reponse.personnes.length === 0 || champs.includes("nom")) {
     erreurs.push("erreur-nom");
   }
-  const dessertManquant = reponse.personnes.some(
-    (personne) => choisitUnDessert(personne, evenements) && !DESSERTS.includes(personne.dessert),
-  );
-  if (dessertManquant) {
+  if (champs.includes("dessert")) {
     erreurs.push("erreur-dessert");
   }
   return erreurs;

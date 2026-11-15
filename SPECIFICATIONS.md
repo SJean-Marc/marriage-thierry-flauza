@@ -65,12 +65,12 @@ Date limite de réponse : **28 janvier 2027**.
 - Après la révélation : adresse complète, liens Google Maps et Waze.
 
 ### 3.3 Confirmation de présence → Google Sheets
-- Formulaire en tableau : une ligne par personne (ajout/suppression de lignes), une colonne par événement **de l'invitation** (version A, B ou C). Pour chaque personne :
+- Formulaire en cartes : une carte par personne (ajout/suppression), deux côte à côte sur grand écran, avec une ligne par événement **de l'invitation** (version A, B ou C). Pour chaque personne :
   - nom et prénom ;
-  - pour chaque événement, un bouton « Présent » (vert, par défaut) qui devient « Absent » quand on le touche ;
+  - pour chaque événement, un choix segmenté « Présent | Absent » (deux boutons radio, « Présent » par défaut) ;
   - case « végétarien » ;
   - choix du dessert pour la soirée : velvet fruits rouges, pistache fruits rouges ou fruits exotiques (obligatoire si la personne vient à la soirée).
-- Sur mobile, le tableau s'affiche en cartes (une par personne).
+- Champs manquants (nom, dessert) encadrés en rouge, avec le focus sur le premier et un message d'erreur visible.
 - Envoi vers une **Google Sheet** via un **Google Apps Script** publié en application web (gratuit, aucun serveur à gérer).
 - Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, une colonne par événement (« présent », « absent », ou vide si non invité), végétarien, dessert.
 - Le script vérifie que les présences correspondent aux événements de la version et que le dessert est valide.

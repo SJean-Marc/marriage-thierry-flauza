@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { construireEnvoi, estPresenteQuelquePart, validerReponse } from "../js/rsvp.js";
+import { champsInvalides, construireEnvoi, estPresenteQuelquePart, validerReponse } from "../js/rsvp.js";
 
 const TOUS = ["mairie", "religieux", "soiree"];
 
@@ -15,6 +15,28 @@ describe("estPresenteQuelquePart", () => {
 
   it("should_return_false_when_absent_everywhere", () => {
     assert.equal(estPresenteQuelquePart(personne("A", { mairie: false, soiree: false })), false);
+  });
+});
+
+describe("champsInvalides", () => {
+  it("should_return_no_field_when_answer_is_complete", () => {
+    const reponse = { personnes: [personne("Thierry", { soiree: true }, { dessert: "velvet" })] };
+    assert.deepEqual(champsInvalides(reponse, ["soiree"]), []);
+  });
+
+  it("should_list_invalid_fields_in_form_order", () => {
+    const reponse = {
+      personnes: [
+        personne("Thierry", { soiree: true }, { dessert: "velvet" }),
+        personne(" ", { soiree: true }),
+        personne("Flauza", { soiree: true }),
+      ],
+    };
+    assert.deepEqual(champsInvalides(reponse, ["soiree"]), [
+      { index: 1, champ: "nom" },
+      { index: 1, champ: "dessert" },
+      { index: 2, champ: "dessert" },
+    ]);
   });
 });
 

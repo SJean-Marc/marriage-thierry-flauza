@@ -30,7 +30,7 @@ export const TEXTES = {
     "rsvp-titre": "Confirmer votre présence",
     "rsvp-limite": "Merci de confirmer votre présence avant le {date}.",
     "rsvp-aide":
-      "Ajoutez chaque personne de votre foyer. Touchez « Présent » pour indiquer une absence à un événement.",
+      "Ajoutez chaque personne de votre foyer et indiquez sa présence à chaque événement.",
     "rsvp-present": "Présent",
     "rsvp-absent": "Absent",
     "evt-mairie-court": "Mairie",
@@ -88,7 +88,7 @@ export const TEXTES = {
     "rsvp-titre": "உங்கள் வருகையை உறுதிசெய்யுங்கள்",
     "rsvp-limite": "{date}-க்குள் உங்கள் வருகையை உறுதிசெய்யவும்.",
     "rsvp-aide":
-      "உங்கள் குடும்பத்தில் ஒவ்வொருவரையும் சேர்க்கவும். வர இயலாத நிகழ்ச்சிக்கு « வருகை » என்பதைத் தொடவும்.",
+      "உங்கள் குடும்பத்தில் ஒவ்வொருவரையும் சேர்த்து, ஒவ்வொரு நிகழ்ச்சிக்கும் அவர்களின் வருகையைக் குறிப்பிடவும்.",
     "rsvp-present": "வருகை",
     "rsvp-absent": "வரவில்லை",
     "evt-mairie-court": "பதிவுத் திருமணம்",
