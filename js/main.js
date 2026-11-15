@@ -75,6 +75,10 @@ function appliquerTextes() {
   document.querySelectorAll("[data-i18n]").forEach((noeud) => {
     noeud.textContent = t(noeud.dataset.i18n);
   });
+  document.querySelectorAll("[data-i18n-label]").forEach((noeud) => {
+    noeud.setAttribute("aria-label", t(noeud.dataset.i18nLabel));
+  });
+  document.querySelectorAll(".bouton-dessert").forEach(afficherDessert);
   document.querySelectorAll("[data-i18n-placeholder]").forEach((champ) => {
     champ.placeholder = t(champ.dataset.i18nPlaceholder);
     champ.setAttribute("aria-label", champ.placeholder);
@@ -182,31 +186,22 @@ function texteTraduit(balise, cle, classe) {
   return noeud;
 }
 
-// Choix segmenté : deux boutons radio stylés, « Présent » coché par défaut.
-function creerChoixPresence(idPersonne, cle, choixDessert) {
-  const groupe = element("div", "champ champ-presence");
+// Choix segmenté : deux boutons radio stylés, le choix actif est rempli.
+function creerChoixSegmente(nomGroupe, cleIntitule, options) {
+  const groupe = element("div", "champ");
   groupe.setAttribute("role", "radiogroup");
-  const intitule = texteTraduit("span", `evt-${cle}-court`, "intitule");
-  intitule.id = `${idPersonne}-${cle}`;
+  const intitule = texteTraduit("span", cleIntitule, "intitule");
+  intitule.id = `${nomGroupe}-intitule`;
   groupe.setAttribute("aria-labelledby", intitule.id);
 
   const segmente = element("div", "segmente");
-  [
-    ["present", "rsvp-present"],
-    ["absent", "rsvp-absent"],
-  ].forEach(([valeur, cleTexte]) => {
-    const option = element("label", `option-${valeur}`);
+  options.forEach(({ valeur, cleTexte, coche, classe }) => {
+    const option = element("label", classe);
     const radio = element("input");
     radio.type = "radio";
-    radio.name = `${idPersonne}-${cle}`;
+    radio.name = nomGroupe;
     radio.value = valeur;
-    radio.dataset.evenement = cle;
-    radio.checked = valeur === "present";
-    if (cle === EVENEMENT_DESSERT && choixDessert) {
-      radio.addEventListener("change", () => {
-        choixDessert.disabled = valeur === "absent";
-      });
-    }
+    radio.checked = coche;
     option.append(radio, texteTraduit("span", cleTexte));
     segmente.append(option);
   });
@@ -215,22 +210,102 @@ function creerChoixPresence(idPersonne, cle, choixDessert) {
   return groupe;
 }
 
-function creerChoixDessert() {
-  const choix = element("select");
-  choix.name = "dessert";
-  const options = ["", ...DESSERTS].map((dessert) => {
-    const option = texteTraduit("option", dessert ? `dessert-${dessert}` : "rsvp-dessert-choisir");
-    option.value = dessert;
-    return option;
+function creerChoixPresence(idPersonne, cle, boutonDessert) {
+  const groupe = creerChoixSegmente(`${idPersonne}-${cle}`, `evt-${cle}-court`, [
+    { valeur: "present", cleTexte: "rsvp-present", coche: true },
+    { valeur: "absent", cleTexte: "rsvp-absent", coche: false, classe: "option-absent" },
+  ]);
+  groupe.querySelectorAll("input").forEach((radio) => {
+    radio.dataset.evenement = cle;
+    if (cle === EVENEMENT_DESSERT && boutonDessert) {
+      radio.addEventListener("change", () => {
+        boutonDessert.disabled = radio.value === "absent";
+      });
+    }
   });
-  choix.append(...options);
-  return choix;
+  return groupe;
 }
 
-function champAvecLibelle(cleLibelle, controle, classe) {
-  const champ = element("label", `champ ${classe}`);
-  champ.append(texteTraduit("span", cleLibelle, "intitule"), controle);
-  return champ;
+function creerChoixMenu(idPersonne) {
+  return creerChoixSegmente(`${idPersonne}-menu`, "rsvp-menu", [
+    { valeur: "vegetarien", cleTexte: "rsvp-vegetarien", coche: false },
+    { valeur: "non-vegetarien", cleTexte: "rsvp-non-vegetarien", coche: true },
+  ]);
+}
+
+// --- Dessert : bouton dans la carte + fenêtre de choix avec les images des gâteaux ---
+
+const ICONE_CRAYON =
+  '<svg class="crayon" viewBox="0 0 24 24" aria-hidden="true">' +
+  '<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" fill="none" stroke="currentColor" ' +
+  'stroke-width="1.8" stroke-linejoin="round"/></svg>';
+
+let boutonDessertActif = null;
+
+function imageDessert(dessert, classe) {
+  const image = element("img", classe);
+  image.src = `assets/img/dessert-${dessert}.svg`;
+  image.alt = "";
+  return image;
+}
+
+function afficherDessert(bouton) {
+  const dessert = bouton.value;
+  if (!dessert) {
+    bouton.replaceChildren(element("span", "", t("rsvp-dessert-choisir")));
+    bouton.setAttribute("aria-label", `${t("rsvp-dessert")} : ${t("rsvp-dessert-choisir")}`);
+    return;
+  }
+  const nom = t(`dessert-${dessert}`);
+  bouton.replaceChildren(imageDessert(dessert, "dessert-miniature"), element("span", "", nom));
+  bouton.insertAdjacentHTML("beforeend", ICONE_CRAYON);
+  bouton.setAttribute("aria-label", `${t("rsvp-dessert")} : ${nom}. ${t("rsvp-dessert-modifier")}`);
+}
+
+function creerBoutonDessert() {
+  const bouton = element("button", "bouton-dessert");
+  bouton.type = "button";
+  bouton.name = "dessert";
+  bouton.value = "";
+  afficherDessert(bouton);
+  bouton.addEventListener("click", () => ouvrirFenetreDessert(bouton));
+  return bouton;
+}
+
+function ouvrirFenetreDessert(bouton) {
+  boutonDessertActif = bouton;
+  const fenetre = document.getElementById("fenetre-dessert");
+  const options = [...fenetre.querySelectorAll(".option-dessert")];
+  options.forEach((option) => option.setAttribute("aria-pressed", String(option.value === bouton.value)));
+  fenetre.showModal();
+  (options.find((option) => option.value === bouton.value) ?? options[0]).focus();
+}
+
+function choisirDessert(dessert) {
+  boutonDessertActif.value = dessert;
+  boutonDessertActif.removeAttribute("aria-invalid");
+  afficherDessert(boutonDessertActif);
+  document.getElementById("fenetre-dessert").close();
+}
+
+function initialiserFenetreDessert() {
+  const fenetre = document.getElementById("fenetre-dessert");
+  const options = DESSERTS.map((dessert) => {
+    const option = element("button", "option-dessert");
+    option.type = "button";
+    option.value = dessert;
+    option.append(imageDessert(dessert, "dessert-image"), texteTraduit("span", `dessert-${dessert}`, "dessert-nom"));
+    option.addEventListener("click", () => choisirDessert(dessert));
+    return option;
+  });
+  document.getElementById("liste-desserts").replaceChildren(...options);
+  document.getElementById("fermer-dessert").addEventListener("click", () => fenetre.close());
+  // Clic sur le fond assombri (hors du contenu) : ferme la fenêtre.
+  fenetre.addEventListener("click", (evenement) => {
+    if (evenement.target === fenetre) {
+      fenetre.close();
+    }
+  });
 }
 
 function ajouterPersonne() {
@@ -248,16 +323,14 @@ function ajouterPersonne() {
   nom.setAttribute("aria-label", t("rsvp-nom"));
   ligne.append(nom);
 
-  const choixDessert = aLeDessert() ? creerChoixDessert() : null;
-  etat.evenements.forEach((cle) => ligne.append(creerChoixPresence(idPersonne, cle, choixDessert)));
+  const boutonDessert = aLeDessert() ? creerBoutonDessert() : null;
+  etat.evenements.forEach((cle) => ligne.append(creerChoixPresence(idPersonne, cle, boutonDessert)));
+  ligne.append(creerChoixMenu(idPersonne));
 
-  const caseVegetarien = element("input");
-  caseVegetarien.type = "checkbox";
-  caseVegetarien.name = "vegetarien";
-  ligne.append(champAvecLibelle("rsvp-vegetarien", caseVegetarien, "champ-vegetarien"));
-
-  if (choixDessert) {
-    ligne.append(champAvecLibelle("rsvp-dessert", choixDessert, "champ-dessert"));
+  if (boutonDessert) {
+    const champDessert = element("div", "champ champ-dessert");
+    champDessert.append(texteTraduit("span", "rsvp-dessert", "intitule"), boutonDessert);
+    ligne.append(champDessert);
   }
 
   const retirer = texteTraduit("button", "rsvp-retirer", "retirer");
@@ -269,9 +342,8 @@ function ajouterPersonne() {
   });
   ligne.append(retirer);
 
-  // Un champ signalé en erreur redevient neutre dès que l'invité le modifie.
-  ligne.addEventListener("input", (evenement) => evenement.target.removeAttribute("aria-invalid"));
-  ligne.addEventListener("change", (evenement) => evenement.target.removeAttribute("aria-invalid"));
+  // Le nom signalé en erreur redevient neutre dès que l'invité le modifie.
+  nom.addEventListener("input", () => nom.removeAttribute("aria-invalid"));
 
   liste.append(ligne);
   return nom;
@@ -285,13 +357,13 @@ function lireReponse(formulaire) {
   const personnes = lignesPersonnes().map((ligne) => ({
     nom: ligne.querySelector('input[name="nom"]').value,
     presences: Object.fromEntries(
-      [...ligne.querySelectorAll('input[type="radio"]:checked')].map((radio) => [
+      [...ligne.querySelectorAll("input[data-evenement]:checked")].map((radio) => [
         radio.dataset.evenement,
         radio.value === "present",
       ]),
     ),
-    vegetarien: ligne.querySelector('input[name="vegetarien"]').checked,
-    dessert: ligne.querySelector('select[name="dessert"]')?.value ?? "",
+    vegetarien: ligne.querySelector('input[value="vegetarien"]').checked,
+    dessert: ligne.querySelector('button[name="dessert"]')?.value ?? "",
   }));
   return { personnes, site: formulaire.elements.site.value };
 }
@@ -353,6 +425,7 @@ function initialiserFormulaire() {
   // Focus seulement sur une ligne ajoutée par l'invité : au chargement, la page ne doit pas sauter au formulaire.
   document.getElementById("ajouter-personne").addEventListener("click", () => ajouterPersonne().focus());
   document.getElementById("formulaire-rsvp").addEventListener("submit", envoyerReponse);
+  initialiserFenetreDessert();
   ajouterPersonne();
 }
 

@@ -53,6 +53,13 @@
         <p class="message" id="message-rsvp" role="status"></p>
         <button type="submit" class="bouton" id="envoyer-rsvp" data-i18n="rsvp-envoyer"></button>
       </form>
+      <dialog class="fenetre-dessert" id="fenetre-dessert" aria-labelledby="titre-dessert">
+        <div class="fenetre-contenu">
+          <button type="button" class="fermer" id="fermer-dessert" data-i18n-label="fermer">&times;</button>
+          <h3 id="titre-dessert" data-i18n="rsvp-dessert-titre"></h3>
+          <div class="desserts" id="liste-desserts"></div>
+        </div>
+      </dialog>
     </section>
 
     <section class="section cagnotte" aria-labelledby="titre-cagnotte">

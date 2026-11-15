@@ -68,8 +68,8 @@ Date limite de réponse : **28 janvier 2027**.
 - Formulaire en cartes : une carte par personne (ajout/suppression), deux côte à côte sur grand écran, avec une ligne par événement **de l'invitation** (version A, B ou C). Pour chaque personne :
   - nom et prénom ;
   - pour chaque événement, un choix segmenté « Présent | Absent » (deux boutons radio, « Présent » par défaut) ;
-  - case « végétarien » ;
-  - choix du dessert pour la soirée : velvet fruits rouges, pistache fruits rouges ou fruits exotiques (obligatoire si la personne vient à la soirée).
+  - menu : choix segmenté « Végétarien | Non végétarien » (« Non végétarien » par défaut) ;
+  - dessert pour la soirée (obligatoire si la personne y vient) : un bouton ouvre une fenêtre avec les 3 gâteaux en image (velvet fruits rouges, pistache fruits rouges, fruits exotiques) ; le choix s'affiche ensuite dans la carte avec un crayon pour le modifier. Images provisoires : `assets/img/dessert-*.svg`, à remplacer par de vraies photos.
 - Champs manquants (nom, dessert) encadrés en rouge, avec le focus sur le premier et un message d'erreur visible.
 - Envoi vers une **Google Sheet** via un **Google Apps Script** publié en application web (gratuit, aucun serveur à gérer).
 - Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, une colonne par événement (« présent », « absent », ou vide si non invité), végétarien, dessert.

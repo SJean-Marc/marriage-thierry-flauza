@@ -502,10 +502,11 @@ h2::after {
   font-weight: 600;
 }
 
-.champ-nom,
-.personne select {
+.champ-nom {
+  width: 100%;
   min-width: 0;
   min-height: 48px;
+  margin-bottom: 12px;
   padding: 10px 12px;
   border: 1px solid var(--or);
   border-radius: 10px;
@@ -514,25 +515,50 @@ h2::after {
   font: inherit;
 }
 
-.champ-nom {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
 .champ-nom::placeholder {
   color: var(--texte-doux);
   opacity: 1;
 }
 
-/* Le menu garde sa largeur naturelle ; s'il ne tient pas à côté de l'intitulé, il passe dessous. */
-.personne select {
+/* Bouton du dessert : « Choisir… », puis miniature + goût + crayon une fois choisi. */
+.bouton-dessert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   max-width: 100%;
+  min-height: 48px;
+  padding: 4px 14px 4px 6px;
+  border: 1px solid var(--or);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--bordeaux);
+  font: 600 1rem var(--police-titre);
+  text-align: left;
+  cursor: pointer;
 }
 
-.personne select:disabled {
+.bouton-dessert:has(> span:only-child) {
+  padding-left: 18px;
+}
+
+.dessert-miniature {
+  width: 40px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.crayon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--or-texte);
+}
+
+.bouton-dessert:disabled {
   border-style: dashed;
   background: transparent;
   opacity: 0.55;
+  cursor: not-allowed;
 }
 
 [aria-invalid="true"] {
@@ -540,18 +566,7 @@ h2::after {
   box-shadow: 0 0 0 1px var(--erreur);
 }
 
-.champ-vegetarien {
-  cursor: pointer;
-}
-
-.champ-vegetarien input {
-  width: 28px;
-  height: 28px;
-  margin: 8px 0;
-  accent-color: var(--bordeaux);
-}
-
-/* Choix segmenté « Présent | Absent » : deux boutons radio, le choix actif est rempli. */
+/* Choix segmenté (« Présent | Absent », « Végétarien | Non végétarien ») : deux boutons radio, le choix actif est rempli. */
 .segmente {
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
@@ -587,12 +602,12 @@ h2::after {
   pointer-events: none;
 }
 
-.option-present:has(input:checked) {
+.segmente label:has(input:checked) {
   background: var(--bordeaux);
   color: var(--fond-clair);
 }
 
-.option-absent:has(input:checked) {
+.segmente .option-absent:has(input:checked) {
   background: var(--brun-absent);
   color: var(--fond-clair);
 }
@@ -625,6 +640,145 @@ h2::after {
 
 .personne:only-child .retirer {
   display: none;
+}
+
+#envoyer-rsvp {
+  margin-top: 28px;
+}
+
+/* --- Fenêtre de choix du dessert --- */
+
+.fenetre-dessert {
+  width: min(100% - 32px, 680px);
+  max-height: calc(100% - 32px);
+  padding: 0;
+  border: 1px solid var(--or);
+  border-radius: 22px;
+  background: var(--fond-clair);
+  color: var(--texte);
+  box-shadow: 0 20px 60px rgba(59, 42, 32, 0.35);
+}
+
+.fenetre-dessert::backdrop {
+  background: rgba(59, 42, 32, 0.55);
+}
+
+.fenetre-contenu {
+  position: relative;
+  padding: 28px 20px 24px;
+  text-align: center;
+}
+
+.fenetre-dessert h3 {
+  margin: 0 36px 20px;
+  color: var(--bordeaux);
+  font: 600 1.4rem var(--police-titre);
+  letter-spacing: 0.04em;
+}
+
+.fermer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--bordeaux);
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.desserts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.option-dessert {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 16px;
+  border: 1px solid var(--or-clair);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--bordeaux);
+  font: 600 1.05rem var(--police-titre);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.option-dessert:hover {
+  border-color: var(--or);
+  transform: translateY(-2px);
+}
+
+.option-dessert[aria-pressed="true"] {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 2px var(--bordeaux);
+}
+
+/* Pastille ✓ sur le dessert déjà choisi. */
+.option-dessert[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bordeaux);
+  color: var(--fond-clair);
+  font-size: 0.9rem;
+}
+
+.dessert-image {
+  width: 100%;
+  max-width: 170px;
+  aspect-ratio: 200 / 170;
+}
+
+:lang(ta) .option-dessert,
+:lang(ta) .bouton-dessert,
+:lang(ta) .fenetre-dessert h3 {
+  font-family: "Noto Serif Tamil", var(--police-titre);
+  font-size: 0.95rem;
+}
+
+/* Mobile : une ligne par gâteau (image à gauche, goût à droite). */
+@media (max-width: 560px) {
+  .desserts {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .option-dessert {
+    flex-direction: row;
+    gap: 14px;
+    padding: 8px 14px 8px 8px;
+    text-align: left;
+  }
+
+  .dessert-image {
+    width: 96px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option-dessert {
+    transition: none;
+  }
+
+  .option-dessert:hover {
+    transform: none;
+  }
 }
 
 .piege {
