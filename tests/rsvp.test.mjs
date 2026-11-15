@@ -5,7 +5,7 @@ import { champsInvalides, construireEnvoi, estPresenteQuelquePart, validerRepons
 const TOUS = ["mairie", "religieux", "soiree"];
 
 function personne(nom, presences, autres = {}) {
-  return { nom, presences, vegetarien: false, dessert: "", ...autres };
+  return { nom, presences, vegetarien: {}, dessert: "", ...autres };
 }
 
 describe("estPresenteQuelquePart", () => {
@@ -91,61 +91,82 @@ describe("validerReponse", () => {
 });
 
 describe("construireEnvoi", () => {
+  const MERCREDI = { jour: "mercredi", evenements: ["mairie"] };
+  const JEUDI = { jour: "jeudi", evenements: ["religieux", "soiree"] };
+  const SOIREE_SEULE = { jour: "jeudi", evenements: ["soiree"] };
+
   it("should_trim_names_and_keep_choices_when_present", () => {
     const reponse = {
       personnes: [
-        personne("  Thierry ", { religieux: true, soiree: true }, { vegetarien: true, dessert: "pistache" }),
-        personne("Flauza", { religieux: false, soiree: true }, { dessert: "exotique" }),
+        personne(
+          "  Thierry ",
+          { mairie: true, religieux: true, soiree: true },
+          { vegetarien: { mercredi: true, jeudi: false }, dessert: "pistache" },
+        ),
+        personne(
+          "Flauza",
+          { mairie: false, religieux: false, soiree: true },
+          { vegetarien: { mercredi: false, jeudi: true }, dessert: "exotique" },
+        ),
       ],
       site: "",
     };
-    assert.deepEqual(construireEnvoi("abc123", "ta", reponse, ["religieux", "soiree"]), {
+    assert.deepEqual(construireEnvoi("abc123", "ta", reponse, [MERCREDI, JEUDI]), {
       code: "abc123",
       langue: "ta",
       personnes: [
-        { nom: "Thierry", presences: { religieux: true, soiree: true }, vegetarien: true, dessert: "pistache" },
-        { nom: "Flauza", presences: { religieux: false, soiree: true }, vegetarien: false, dessert: "exotique" },
+        {
+          nom: "Thierry",
+          presences: { mairie: true, religieux: true, soiree: true },
+          vegetarien: { mercredi: true, jeudi: false },
+          dessert: "pistache",
+        },
+        {
+          nom: "Flauza",
+          presences: { mairie: false, religieux: false, soiree: true },
+          vegetarien: { mercredi: false, jeudi: true },
+          dessert: "exotique",
+        },
       ],
       site: "",
     });
   });
 
-  it("should_keep_only_events_of_the_invitation", () => {
-    const reponse = { personnes: [personne("Thierry", { mairie: true, soiree: true }, { dessert: "velvet" })] };
-    assert.deepEqual(construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0].presences, {
-      soiree: true,
-    });
-  });
-
-  it("should_mark_missing_events_as_absent", () => {
-    const reponse = { personnes: [personne("Thierry", {})] };
-    assert.deepEqual(construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0].presences, {
-      soiree: false,
-    });
-  });
-
-  it("should_clear_vegetarian_and_dessert_when_absent_everywhere", () => {
-    const reponse = {
-      personnes: [personne("Thierry", { soiree: false }, { vegetarien: true, dessert: "velvet" })],
-    };
-    const envoye = construireEnvoi("abc123", "fr", reponse, ["soiree"]).personnes[0];
-    assert.equal(envoye.vegetarien, false);
-    assert.equal(envoye.dessert, "");
-  });
-
-  it("should_clear_dessert_but_keep_vegetarian_when_absent_from_reception_only", () => {
+  it("should_keep_only_events_and_days_of_the_invitation", () => {
     const reponse = {
       personnes: [
-        personne("Thierry", { religieux: true, soiree: false }, { vegetarien: true, dessert: "velvet" }),
+        personne("Thierry", { mairie: true, soiree: true }, { vegetarien: { mercredi: true, jeudi: true }, dessert: "velvet" }),
       ],
     };
-    const envoye = construireEnvoi("abc123", "fr", reponse, ["religieux", "soiree"]).personnes[0];
-    assert.equal(envoye.vegetarien, true);
+    const envoye = construireEnvoi("abc123", "fr", reponse, [SOIREE_SEULE]).personnes[0];
+    assert.deepEqual(envoye.presences, { soiree: true });
+    assert.deepEqual(envoye.vegetarien, { jeudi: true });
+  });
+
+  it("should_mark_missing_events_as_absent_and_missing_menus_as_not_vegetarian", () => {
+    const reponse = { personnes: [personne("Thierry", { soiree: true }, { vegetarien: undefined, dessert: "velvet" })] };
+    const envoye = construireEnvoi("abc123", "fr", reponse, [JEUDI]).personnes[0];
+    assert.deepEqual(envoye.presences, { religieux: false, soiree: true });
+    assert.deepEqual(envoye.vegetarien, { jeudi: false });
+  });
+
+  it("should_clear_menu_of_a_day_where_the_person_is_absent", () => {
+    const reponse = {
+      personnes: [
+        personne(
+          "Thierry",
+          { mairie: false, religieux: true, soiree: false },
+          { vegetarien: { mercredi: true, jeudi: true }, dessert: "velvet" },
+        ),
+      ],
+    };
+    const envoye = construireEnvoi("abc123", "fr", reponse, [MERCREDI, JEUDI]).personnes[0];
+    assert.deepEqual(envoye.vegetarien, { mercredi: false, jeudi: true });
     assert.equal(envoye.dessert, "");
   });
 
   it("should_send_empty_honeypot_when_field_is_absent", () => {
     const reponse = { personnes: [personne("Thierry", { soiree: false })] };
-    assert.equal(construireEnvoi("abc123", "fr", reponse, ["soiree"]).site, "");
+    assert.equal(construireEnvoi("abc123", "fr", reponse, [SOIREE_SEULE]).site, "");
   });
 });

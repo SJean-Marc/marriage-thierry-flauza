@@ -16,3 +16,13 @@ export function evenementVedette(evenements) {
 export function evenementsDeLaVersion(version, evenementsParVersion) {
   return evenementsParVersion[version] ?? [];
 }
+
+// Jours de l'invitation, chacun avec ses événements ; un jour sans événement de l'invitation est omis.
+export function joursDeLInvitation(evenements, jours) {
+  return Object.entries(jours)
+    .map(([jour, evenementsDuJour]) => ({
+      jour,
+      evenements: evenementsDuJour.filter((cle) => evenements.includes(cle)),
+    }))
+    .filter((groupe) => groupe.evenements.length > 0);
+}

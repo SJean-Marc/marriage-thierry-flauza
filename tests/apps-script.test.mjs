@@ -81,16 +81,22 @@ function poster(contexte, donnees) {
 }
 
 const TOUS_PRESENTS = { mairie: true, religieux: true, soiree: true };
+const NON_VEGETARIEN = { mercredi: false, jeudi: false };
 
 const ENVOI_VALIDE = {
   code: "CgX4ht",
   langue: "ta",
   personnes: [
-    { nom: " Thierry ", presences: TOUS_PRESENTS, vegetarien: true, dessert: "velvet" },
+    {
+      nom: " Thierry ",
+      presences: TOUS_PRESENTS,
+      vegetarien: { mercredi: true, jeudi: false },
+      dessert: "velvet",
+    },
     {
       nom: "Flauza",
       presences: { mairie: false, religieux: true, soiree: true },
-      vegetarien: false,
+      vegetarien: { mercredi: false, jeudi: true },
       dessert: "exotique",
     },
   ],
@@ -98,7 +104,7 @@ const ENVOI_VALIDE = {
 };
 
 function invite(nom, autres = {}) {
-  return { nom, presences: TOUS_PRESENTS, vegetarien: false, dessert: "pistache", ...autres };
+  return { nom, presences: TOUS_PRESENTS, vegetarien: NON_VEGETARIEN, dessert: "pistache", ...autres };
 }
 
 describe("doGet", () => {
@@ -185,35 +191,28 @@ describe("doPost", () => {
     assert.equal(script.feuille.lignes.length, 3);
     assert.equal(
       entetes.join("|"),
-      "Horodatage|Réponse n°|Version|Langue|Nom|Mairie|Religieux|Soirée|Végétarien|Dessert",
+      "Horodatage|Réponse n°|Version|Langue|Nom|Mairie|Menu 17/03|Religieux|Soirée|Menu 18/03|Dessert",
     );
     assert.equal(
       premiere.slice(1).join("|"),
-      "1234abcd|A|ta|Thierry|présent|présent|présent|oui|Velvet fruits rouges",
+      "1234abcd|A|ta|Thierry|présent|végétarien|présent|présent|non végétarien|Velvet fruits rouges",
     );
-    assert.equal(
-      seconde.slice(1).join("|"),
-      "1234abcd|A|ta|Flauza|absent|présent|présent|non|Fruits exotiques",
-    );
+    assert.equal(seconde.slice(1).join("|"), "1234abcd|A|ta|Flauza|absent||présent|présent|végétarien|Fruits exotiques");
     assert.equal(Object.prototype.toString.call(premiere[0]), "[object Date]");
   });
 
-  it("should_leave_events_outside_the_invitation_empty", () => {
+  it("should_leave_events_and_days_outside_the_invitation_empty", () => {
     poster(script.contexte, {
       ...ENVOI_VALIDE,
       code: "rLXUq7",
-      personnes: [invite("Thierry", { presences: { soiree: true } })],
+      personnes: [invite("Thierry", { presences: { soiree: true }, vegetarien: { jeudi: true } })],
     });
-    assert.equal(script.feuille.lignes[1].slice(5).join("|"), "||présent|non|Pistache fruits rouges");
+    assert.equal(script.feuille.lignes[1].slice(5).join("|"), "|||présent|végétarien|Pistache fruits rouges");
   });
 
-  it("should_ignore_presence_sent_for_events_outside_the_invitation", () => {
-    poster(script.contexte, {
-      ...ENVOI_VALIDE,
-      code: "NXrmCt",
-      personnes: [invite("Thierry")],
-    });
-    assert.equal(script.feuille.lignes[1][5], "");
+  it("should_ignore_answers_sent_for_events_outside_the_invitation", () => {
+    poster(script.contexte, { ...ENVOI_VALIDE, code: "NXrmCt", personnes: [invite("Thierry")] });
+    assert.equal(script.feuille.lignes[1].slice(5, 7).join("|"), "|");
   });
 
   it("should_take_and_release_the_lock", () => {
@@ -235,27 +234,27 @@ describe("doPost", () => {
     assert.equal(script.feuille.lignes[1][3], "fr");
   });
 
-  it("should_record_person_absent_everywhere_without_vegetarian_nor_dessert", () => {
+  it("should_record_person_absent_everywhere_without_menu_nor_dessert", () => {
     const absent = { mairie: false, religieux: false, soiree: false };
     poster(script.contexte, {
       ...ENVOI_VALIDE,
-      personnes: [invite("Thierry", { presences: absent, vegetarien: true, dessert: "" })],
+      personnes: [invite("Thierry", { presences: absent, vegetarien: { mercredi: true, jeudi: true }, dessert: "" })],
     });
-    assert.equal(script.feuille.lignes[1].slice(4).join("|"), "Thierry|absent|absent|absent|non|");
+    assert.equal(script.feuille.lignes[1].slice(4).join("|"), "Thierry|absent||absent|absent||");
   });
 
-  it("should_not_record_dessert_when_absent_from_reception", () => {
+  it("should_keep_thursday_menu_but_no_dessert_when_only_at_the_ceremony", () => {
     poster(script.contexte, {
       ...ENVOI_VALIDE,
       personnes: [
         invite("Thierry", {
-          presences: { mairie: true, religieux: true, soiree: false },
-          vegetarien: true,
+          presences: { mairie: false, religieux: true, soiree: false },
+          vegetarien: { mercredi: false, jeudi: true },
           dessert: "inconnu",
         }),
       ],
     });
-    assert.equal(script.feuille.lignes[1].slice(8).join("|"), "oui|");
+    assert.equal(script.feuille.lignes[1].slice(9).join("|"), "végétarien|");
   });
 
   it("should_neutralize_names_that_look_like_formulas", () => {
@@ -305,6 +304,9 @@ describe("doPost", () => {
     presences_nulles: [invite("Thierry", { presences: null })],
     presence_manquante: [invite("Thierry", { presences: { religieux: true, soiree: true } })],
     presence_non_booleenne: [invite("Thierry", { presences: { ...TOUS_PRESENTS, mairie: "oui" } })],
+    menus_absents: [invite("Thierry", { vegetarien: undefined })],
+    menu_manquant: [invite("Thierry", { vegetarien: { jeudi: false } })],
+    menu_non_booleen: [invite("Thierry", { vegetarien: { mercredi: "oui", jeudi: false } })],
   };
 
   for (const [cas, personnes] of Object.entries(PERSONNES_INVALIDES)) {

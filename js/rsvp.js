@@ -1,5 +1,6 @@
 // Validation et préparation de la réponse au formulaire de présence.
-// Chaque personne indique, pour chaque événement de son invitation, si elle sera présente.
+// Chaque personne indique, pour chaque événement de son invitation, si elle sera présente,
+// son menu (végétarien ou non) pour chaque jour, et son dessert pour la soirée.
 
 export const EVENEMENT_DESSERT = "soiree";
 export const DESSERTS = ["velvet", "pistache", "exotique"];
@@ -38,7 +39,10 @@ export function validerReponse(reponse, evenements) {
   return erreurs;
 }
 
-export function construireEnvoi(code, langue, reponse, evenements) {
+// jours : [{ jour, evenements }] de l'invitation (voir joursDeLInvitation).
+// Le menu végétarien n'est gardé que pour un jour où la personne vient à au moins un événement.
+export function construireEnvoi(code, langue, reponse, jours) {
+  const evenements = jours.flatMap((groupe) => groupe.evenements);
   return {
     code,
     langue,
@@ -46,12 +50,17 @@ export function construireEnvoi(code, langue, reponse, evenements) {
       const presences = Object.fromEntries(
         evenements.map((cle) => [cle, personne.presences[cle] === true]),
       );
-      const normalisee = { ...personne, presences };
+      const vegetarien = Object.fromEntries(
+        jours.map(({ jour, evenements: evenementsDuJour }) => [
+          jour,
+          evenementsDuJour.some((cle) => presences[cle]) && personne.vegetarien?.[jour] === true,
+        ]),
+      );
       return {
         nom: personne.nom.trim(),
         presences,
-        vegetarien: estPresenteQuelquePart(normalisee) && personne.vegetarien === true,
-        dessert: choisitUnDessert(normalisee, evenements) ? personne.dessert : "",
+        vegetarien,
+        dessert: choisitUnDessert({ presences }, evenements) ? personne.dessert : "",
       };
     }),
     site: reponse.site ?? "",

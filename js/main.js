@@ -1,6 +1,6 @@
 import { CONFIG } from "./config.js";
 import { formaterDate, langueInitiale, traduire } from "./i18n.js";
-import { evenementVedette, evenementsDeLaVersion, lireInvitation } from "./invitation.js";
+import { evenementVedette, evenementsDeLaVersion, joursDeLInvitation, lireInvitation } from "./invitation.js";
 import {
   DESSERTS,
   EVENEMENT_DESSERT,
@@ -30,11 +30,13 @@ const ARCHE_SVG =
   `</svg>`;
 
 const invitation = lireInvitation(window.location.search, CONFIG.versions);
+const evenementsInvites = invitation ? evenementsDeLaVersion(invitation.version, CONFIG.evenementsParVersion) : [];
 
 const etat = {
   langue: langueInitiale(lireLangueMemorisee(), new URLSearchParams(window.location.search).get("lang")),
   invitation,
-  evenements: invitation ? evenementsDeLaVersion(invitation.version, CONFIG.evenementsParVersion) : [],
+  evenements: evenementsInvites,
+  jours: joursDeLInvitation(evenementsInvites, CONFIG.jours),
   lieux: null,
 };
 
@@ -210,27 +212,44 @@ function creerChoixSegmente(nomGroupe, cleIntitule, options) {
   return groupe;
 }
 
-function creerChoixPresence(idPersonne, cle, boutonDessert) {
+function creerChoixPresence(idPersonne, cle) {
   const groupe = creerChoixSegmente(`${idPersonne}-${cle}`, `evt-${cle}-court`, [
     { valeur: "present", cleTexte: "rsvp-present", coche: true },
     { valeur: "absent", cleTexte: "rsvp-absent", coche: false, classe: "option-absent" },
   ]);
   groupe.querySelectorAll("input").forEach((radio) => {
     radio.dataset.evenement = cle;
-    if (cle === EVENEMENT_DESSERT && boutonDessert) {
-      radio.addEventListener("change", () => {
-        boutonDessert.disabled = radio.value === "absent";
-      });
-    }
   });
   return groupe;
 }
 
-function creerChoixMenu(idPersonne) {
-  return creerChoixSegmente(`${idPersonne}-menu`, "rsvp-menu", [
+// Menu propre à chaque jour : on peut être végétarien un jour et pas l'autre.
+function creerChoixMenu(idPersonne, jour) {
+  const groupe = creerChoixSegmente(`${idPersonne}-menu-${jour}`, "rsvp-menu", [
     { valeur: "vegetarien", cleTexte: "rsvp-vegetarien", coche: false },
     { valeur: "non-vegetarien", cleTexte: "rsvp-non-vegetarien", coche: true },
   ]);
+  groupe.querySelectorAll("input").forEach((radio) => {
+    radio.dataset.jour = jour;
+  });
+  return groupe;
+}
+
+// Menu d'un jour désactivé si la personne est absente à tous les événements de ce jour,
+// dessert désactivé si elle est absente à la soirée.
+function mettreAJourDisponibilites(ligne) {
+  ligne.querySelectorAll(".jour").forEach((groupe) => {
+    const vientCeJour = groupe.querySelector('input[data-evenement][value="present"]:checked') !== null;
+    groupe.querySelectorAll("input[data-jour]").forEach((radio) => {
+      radio.disabled = !vientCeJour;
+    });
+  });
+  const boutonDessert = ligne.querySelector(".bouton-dessert");
+  if (boutonDessert) {
+    boutonDessert.disabled = ligne.querySelector(
+      `input[data-evenement="${EVENEMENT_DESSERT}"][value="absent"]`,
+    ).checked;
+  }
 }
 
 // --- Dessert : bouton dans la carte + fenêtre de choix avec les images des gâteaux ---
@@ -308,6 +327,23 @@ function initialiserFenetreDessert() {
   });
 }
 
+const ICONE_POUBELLE =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" ' +
+  'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function creerGroupeJour(idPersonne, { jour, evenements }) {
+  const groupe = element("fieldset", "jour");
+  groupe.append(texteTraduit("legend", `jour-${jour}`));
+  evenements.forEach((cle) => groupe.append(creerChoixPresence(idPersonne, cle)));
+  groupe.append(creerChoixMenu(idPersonne, jour));
+  if (evenements.includes(EVENEMENT_DESSERT)) {
+    const champDessert = element("div", "champ champ-dessert");
+    champDessert.append(texteTraduit("span", "rsvp-dessert", "intitule"), creerBoutonDessert());
+    groupe.append(champDessert);
+  }
+  return groupe;
+}
+
 function ajouterPersonne() {
   const liste = document.getElementById("liste-personnes");
   compteurPersonnes += 1;
@@ -321,29 +357,24 @@ function ajouterPersonne() {
   nom.dataset.i18nPlaceholder = "rsvp-nom";
   nom.placeholder = t("rsvp-nom");
   nom.setAttribute("aria-label", t("rsvp-nom"));
-  ligne.append(nom);
+  // Le nom signalé en erreur redevient neutre dès que l'invité le modifie.
+  nom.addEventListener("input", () => nom.removeAttribute("aria-invalid"));
 
-  const boutonDessert = aLeDessert() ? creerBoutonDessert() : null;
-  etat.evenements.forEach((cle) => ligne.append(creerChoixPresence(idPersonne, cle, boutonDessert)));
-  ligne.append(creerChoixMenu(idPersonne));
-
-  if (boutonDessert) {
-    const champDessert = element("div", "champ champ-dessert");
-    champDessert.append(texteTraduit("span", "rsvp-dessert", "intitule"), boutonDessert);
-    ligne.append(champDessert);
-  }
-
-  const retirer = texteTraduit("button", "rsvp-retirer", "retirer");
+  const retirer = element("button", "retirer");
   retirer.type = "button";
+  retirer.dataset.i18nLabel = "rsvp-retirer";
+  retirer.setAttribute("aria-label", t("rsvp-retirer"));
+  retirer.innerHTML = ICONE_POUBELLE;
   retirer.addEventListener("click", () => {
     if (liste.children.length > 1) {
       ligne.remove();
     }
   });
-  ligne.append(retirer);
 
-  // Le nom signalé en erreur redevient neutre dès que l'invité le modifie.
-  nom.addEventListener("input", () => nom.removeAttribute("aria-invalid"));
+  const entete = element("div", "entete-personne");
+  entete.append(nom, retirer);
+  ligne.append(entete, ...etat.jours.map((groupe) => creerGroupeJour(idPersonne, groupe)));
+  ligne.addEventListener("change", () => mettreAJourDisponibilites(ligne));
 
   liste.append(ligne);
   return nom;
@@ -362,7 +393,9 @@ function lireReponse(formulaire) {
         radio.value === "present",
       ]),
     ),
-    vegetarien: ligne.querySelector('input[value="vegetarien"]').checked,
+    vegetarien: Object.fromEntries(
+      [...ligne.querySelectorAll('input[value="vegetarien"]')].map((radio) => [radio.dataset.jour, radio.checked]),
+    ),
     dessert: ligne.querySelector('button[name="dessert"]')?.value ?? "",
   }));
   return { personnes, site: formulaire.elements.site.value };
@@ -402,7 +435,7 @@ async function envoyerReponse(evenement) {
   bouton.disabled = true;
   bouton.textContent = t("rsvp-envoi");
   try {
-    const envoi = construireEnvoi(etat.invitation.code, etat.langue, reponse, etat.evenements);
+    const envoi = construireEnvoi(etat.invitation.code, etat.langue, reponse, etat.jours);
     const resultat = await fetch(CONFIG.urlScript, {
       method: "POST",
       body: JSON.stringify(envoi),

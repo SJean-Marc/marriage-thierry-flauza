@@ -1,6 +1,7 @@
 // Script Google Apps Script lié à la Google Sheet des réponses.
-// - doPost : enregistre les réponses au formulaire de présence (une ligne par personne,
-//            une colonne par événement : « présent », « absent », ou vide si non invité).
+// - doPost : enregistre les réponses au formulaire de présence (une ligne par personne) :
+//            par événement « présent », « absent » ou vide si non invité ; par jour le menu
+//            « végétarien » / « non végétarien », vide si non invité ou absent ce jour-là.
 // - doGet  : fournit les lieux de la version d'invitation, seulement après la date de révélation.
 //
 // Propriétés du script (Paramètres du projet > Propriétés du script) :
@@ -16,7 +17,17 @@ const EVENEMENTS = {
   C: ["soiree"],
 };
 
-const COLONNES_EVENEMENTS = ["mairie", "religieux", "soiree"];
+// Doit rester identique à CONFIG.jours (js/config.js).
+const JOURS = { mercredi: ["mairie"], jeudi: ["religieux", "soiree"] };
+
+// Colonnes de la feuille entre « Nom » et « Dessert », regroupées par jour.
+const COLONNES = [
+  { titre: "Mairie", evenement: "mairie" },
+  { titre: "Menu 17/03", jour: "mercredi" },
+  { titre: "Religieux", evenement: "religieux" },
+  { titre: "Soirée", evenement: "soiree" },
+  { titre: "Menu 18/03", jour: "jeudi" },
+];
 const EVENEMENT_DESSERT = "soiree";
 // Doit rester identique à DESSERTS (js/rsvp.js).
 const DESSERTS = {
@@ -26,18 +37,12 @@ const DESSERTS = {
 };
 
 const NOM_FEUILLE = "Réponses";
-const ENTETES = [
-  "Horodatage",
-  "Réponse n°",
-  "Version",
-  "Langue",
-  "Nom",
-  "Mairie",
-  "Religieux",
-  "Soirée",
-  "Végétarien",
-  "Dessert",
-];
+const ENTETES = ["Horodatage", "Réponse n°", "Version", "Langue", "Nom"].concat(
+  COLONNES.map(function (colonne) {
+    return colonne.titre;
+  }),
+  ["Dessert"],
+);
 const LANGUES = ["fr", "ta"];
 const MAX_PERSONNES = 20;
 const MAX_LONGUEUR_NOM = 100;
@@ -106,7 +111,8 @@ function validerEnvoi(donnees) {
         typeof personne.nom === "string" &&
         personne.nom.trim() !== "" &&
         personne.nom.length <= MAX_LONGUEUR_NOM &&
-        presencesValides(personne.presences, evenements)
+        booleensValides(personne.presences, evenements) &&
+        booleensValides(personne.vegetarien, joursInvites(evenements))
       );
     });
   if (!personnesValides) {
@@ -118,14 +124,44 @@ function validerEnvoi(donnees) {
   return dessertManquant ? "dessert-invalide" : null;
 }
 
-function presencesValides(presences, evenements) {
+// Vérifie qu'un objet donne un booléen pour chacune des clés attendues.
+function booleensValides(objet, cles) {
   return (
-    presences !== null &&
-    typeof presences === "object" &&
-    evenements.every(function (cle) {
-      return typeof presences[cle] === "boolean";
+    objet !== null &&
+    typeof objet === "object" &&
+    cles.every(function (cle) {
+      return typeof objet[cle] === "boolean";
     })
   );
+}
+
+// Événements du jour qui font partie de l'invitation.
+function evenementsDuJour(jour, evenements) {
+  return JOURS[jour].filter(function (cle) {
+    return evenements.indexOf(cle) >= 0;
+  });
+}
+
+function joursInvites(evenements) {
+  return Object.keys(JOURS).filter(function (jour) {
+    return evenementsDuJour(jour, evenements).length > 0;
+  });
+}
+
+function cellule(colonne, personne, evenements) {
+  if (colonne.evenement) {
+    if (evenements.indexOf(colonne.evenement) < 0) {
+      return "";
+    }
+    return personne.presences[colonne.evenement] ? "présent" : "absent";
+  }
+  const vientCeJour = evenementsDuJour(colonne.jour, evenements).some(function (cle) {
+    return personne.presences[cle];
+  });
+  if (!vientCeJour) {
+    return "";
+  }
+  return personne.vegetarien[colonne.jour] ? "végétarien" : "non végétarien";
 }
 
 function choisitUnDessert(personne, evenements) {
@@ -147,23 +183,13 @@ function enregistrer(donnees) {
     const evenements = EVENEMENTS[version];
     const langue = LANGUES.indexOf(donnees.langue) >= 0 ? donnees.langue : "fr";
     const lignes = donnees.personnes.map(function (personne) {
-      const presences = COLONNES_EVENEMENTS.map(function (cle) {
-        if (evenements.indexOf(cle) < 0) {
-          return "";
-        }
-        return personne.presences[cle] ? "présent" : "absent";
+      const colonnes = COLONNES.map(function (colonne) {
+        return cellule(colonne, personne, evenements);
       });
-      const vientQuelquePart = presences.indexOf("présent") >= 0;
-      return [
-        horodatage,
-        numero,
-        version,
-        langue,
-        neutraliserFormule(personne.nom.trim()),
-      ].concat(presences, [
-        vientQuelquePart && personne.vegetarien === true ? "oui" : "non",
-        choisitUnDessert(personne, evenements) ? DESSERTS[personne.dessert] : "",
-      ]);
+      return [horodatage, numero, version, langue, neutraliserFormule(personne.nom.trim())].concat(
+        colonnes,
+        [choisitUnDessert(personne, evenements) ? DESSERTS[personne.dessert] : ""],
+      );
     });
     feuille.getRange(feuille.getLastRow() + 1, 1, lignes.length, ENTETES.length).setValues(lignes);
   } finally {

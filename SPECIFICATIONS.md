@@ -65,14 +65,17 @@ Date limite de réponse : **28 janvier 2027**.
 - Après la révélation : adresse complète, liens Google Maps et Waze.
 
 ### 3.3 Confirmation de présence → Google Sheets
-- Formulaire en cartes : une carte par personne (ajout/suppression), deux côte à côte sur grand écran, avec une ligne par événement **de l'invitation** (version A, B ou C). Pour chaque personne :
+- Formulaire en cartes : une carte par personne (ajout, suppression par une icône poubelle), deux côte à côte sur grand écran. Dans chaque carte, un groupe par jour, avec seulement les événements **de l'invitation** (version A, B ou C) :
+  - **Mercredi 17 mars** : Mairie, Menu ;
+  - **Jeudi 18 mars** : Cérémonie, Soirée, Menu, Dessert.
+- Les contrôles sont alignés dans une même colonne (même début, même fin). Pour chaque personne :
   - nom et prénom ;
   - pour chaque événement, un choix segmenté « Présent | Absent » (deux boutons radio, « Présent » par défaut) ;
-  - menu : choix segmenté « Végétarien | Non végétarien » (« Non végétarien » par défaut) ;
+  - menu **par jour** : choix segmenté « Végétarien | Non végétarien » (« Non végétarien » par défaut), désactivé si la personne est absente à tous les événements du jour ;
   - dessert pour la soirée (obligatoire si la personne y vient) : un bouton ouvre une fenêtre avec les 3 gâteaux en image (velvet fruits rouges, pistache fruits rouges, fruits exotiques) ; le choix s'affiche ensuite dans la carte avec un crayon pour le modifier. Images provisoires : `assets/img/dessert-*.svg`, à remplacer par de vraies photos.
 - Champs manquants (nom, dessert) encadrés en rouge, avec le focus sur le premier et un message d'erreur visible.
 - Envoi vers une **Google Sheet** via un **Google Apps Script** publié en application web (gratuit, aucun serveur à gérer).
-- Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, une colonne par événement (« présent », « absent », ou vide si non invité), végétarien, dessert.
+- Une ligne par personne dans la feuille : horodatage, identifiant de la réponse, version (A/B/C), langue, nom, Mairie, Menu 17/03, Religieux, Soirée, Menu 18/03, Dessert. Événements : « présent », « absent », ou vide si non invité ; menus : « végétarien », « non végétarien », ou vide si non invité ou absent ce jour-là.
 - Le script vérifie que les présences correspondent aux événements de la version et que le dessert est valide.
 - Message de confirmation après l'envoi, et indication de la date limite du 28/01/2027.
 - Anti-spam léger : champ piège invisible (*honeypot*), refus des envois vides.

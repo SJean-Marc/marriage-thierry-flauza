@@ -22,6 +22,13 @@ export const CONFIG = {
     C: ["soiree"],
   },
 
+  // Jour -> événements de ce jour : un groupe par jour dans le formulaire,
+  // avec un choix de menu (végétarien ou non) propre à chaque jour.
+  jours: {
+    mercredi: ["mairie"],
+    jeudi: ["religieux", "soiree"],
+  },
+
   cagnotte: {
     lydia: "https://lydia-app.com/", // PROVISOIRE : lien de la cagnotte Lydia
     paypal: "https://www.paypal.me/", // PROVISOIRE : lien paypal.me

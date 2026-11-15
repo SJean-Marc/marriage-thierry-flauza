@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { evenementVedette, evenementsDeLaVersion, lireInvitation } from "../js/invitation.js";
+import { evenementVedette, evenementsDeLaVersion, joursDeLInvitation, lireInvitation } from "../js/invitation.js";
 
 const VERSIONS = { abc123: "A", def456: "C" };
 const EVENEMENTS = { A: ["mairie", "religieux", "soiree"], C: ["soiree"] };
@@ -40,5 +40,24 @@ describe("evenementsDeLaVersion", () => {
 
   it("should_return_empty_list_when_version_is_unknown", () => {
     assert.deepEqual(evenementsDeLaVersion("Z", EVENEMENTS), []);
+  });
+});
+
+describe("joursDeLInvitation", () => {
+  const JOURS = { mercredi: ["mairie"], jeudi: ["religieux", "soiree"] };
+
+  it("should_group_events_by_day_when_all_events_are_invited", () => {
+    assert.deepEqual(joursDeLInvitation(["mairie", "religieux", "soiree"], JOURS), [
+      { jour: "mercredi", evenements: ["mairie"] },
+      { jour: "jeudi", evenements: ["religieux", "soiree"] },
+    ]);
+  });
+
+  it("should_omit_days_without_invited_event", () => {
+    assert.deepEqual(joursDeLInvitation(["soiree"], JOURS), [{ jour: "jeudi", evenements: ["soiree"] }]);
+  });
+
+  it("should_return_no_day_when_no_event_is_invited", () => {
+    assert.deepEqual(joursDeLInvitation([], JOURS), []);
   });
 });
