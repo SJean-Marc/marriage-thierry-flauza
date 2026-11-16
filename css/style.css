@@ -10,6 +10,7 @@
   --brun-absent: #6b5646;
   --peche: #f6ddb8; /* fond doré pâle des pastilles (jours, bandeau halal) */
   --peche-clair: #fdf1de;
+  --largeur-carte-personne: 460px; /* carte d'une personne, et bandeau halal aligné dessus */
   --erreur: #a3122a;
   --texte: #3b2a20;
   --texte-doux: #7a6250;
@@ -209,22 +210,7 @@ body {
   color: var(--texte);
   font-style: italic;
   font-weight: 600;
-  font-size: 1.15rem;
-}
-
-/* Petits téléphones : carte moins rembourrée, pour que « Cérémonie » tienne sur une ligne. */
-@media (max-width: 400px) {
-  .personne {
-    padding: 14px 10px;
-  }
-
-  .champ {
-    grid-template-columns: 1.6rem minmax(0, 1fr) 56%;
-  }
-
-  .intitule {
-    font-size: 1.05rem;
-  }
+  font-size: 1.25rem;
 }
 
 /* Ornement doré du faire-part entre deux filets */
@@ -501,7 +487,7 @@ h2::after {
 /* --- Formulaire de présence --- */
 
 #formulaire-rsvp {
-  max-width: 880px;
+  max-width: calc(2 * var(--largeur-carte-personne) + 24px); /* deux cartes côte à côte */
   margin: 0 auto;
 }
 
@@ -528,10 +514,10 @@ h2::after {
 .rsvp-halal {
   display: flex;
   align-items: center;
-  gap: 14px;
-  max-width: 36rem;
-  margin: 24px auto;
-  padding: 10px 22px;
+  gap: 16px;
+  max-width: var(--largeur-carte-personne);
+  margin: 32px auto 36px;
+  padding: 16px 22px;
   border: 1px solid var(--or-clair);
   border-radius: 40px;
   background: linear-gradient(180deg, var(--peche-clair), var(--peche));
@@ -547,9 +533,9 @@ h2::after {
 .halal-texte {
   flex: 1;
   margin: 0;
-  padding-left: 14px;
+  padding: 2px 0 2px 16px;
   border-left: 1px solid var(--or);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .halal-texte strong {
@@ -561,17 +547,19 @@ h2::after {
 
 .halal-texte span {
   display: block;
+  margin-top: 4px;
   font-size: 0.95rem;
+  text-wrap: balance;
   font-style: italic;
 }
 
 /* Une carte par personne ; deux côte à côte sur grand écran. */
 .liste-personnes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 420px));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), var(--largeur-carte-personne)));
   justify-content: center;
-  gap: 16px;
-  margin: 0 0 16px;
+  gap: 24px;
+  margin: 0 0 32px;
   padding: 0;
   list-style: none;
 }
@@ -579,11 +567,15 @@ h2::after {
 .personne {
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 24px 20px 20px;
   border: 1px solid var(--or);
   border-radius: 24px;
   background: var(--fond-clair);
-  box-shadow: 0 6px 18px rgba(94, 11, 30, 0.06);
+  /* Double filet doré, comme les cartes du programme. */
+  box-shadow:
+    inset 0 0 0 5px var(--fond-clair),
+    inset 0 0 0 6px var(--or-clair),
+    0 6px 18px rgba(94, 11, 30, 0.06);
   text-align: left;
 }
 
@@ -596,7 +588,7 @@ h2::after {
 
 /* Un groupe par jour (« Mercredi 17 mars », « Jeudi 18 mars »). */
 .jour {
-  margin: 14px 0 0;
+  margin: 26px 0 0;
   padding: 0;
   border: 0;
 }
@@ -608,7 +600,7 @@ h2::after {
   align-items: center;
   gap: 6px;
   width: 100%;
-  margin: 0 0 8px;
+  margin: 0 0 14px;
   padding: 0;
 }
 
@@ -656,8 +648,8 @@ h2::after {
   grid-template-columns: 1.75rem minmax(0, 1fr) min(14.5rem, 58%);
   align-items: center;
   gap: 6px 8px;
-  min-height: 52px;
-  padding: 4px 0;
+  min-height: 56px;
+  padding: 6px 0;
 }
 
 /* Tamoul : intitulés longs, le contrôle passe dessous, sur toute la largeur. */
@@ -693,7 +685,7 @@ h2::after {
 /* Petits téléphones : carte moins rembourrée, pour que « Cérémonie » tienne sur une ligne. */
 @media (max-width: 400px) {
   .personne {
-    padding: 14px 10px;
+    padding: 22px 14px 18px;
   }
 
   .champ {
@@ -701,7 +693,7 @@ h2::after {
   }
 
   .intitule {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -793,7 +785,7 @@ h2::after {
 .segmente {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 
 .segmente label {
@@ -888,7 +880,11 @@ h2::after {
 }
 
 #formulaire-rsvp .filet {
-  margin: 24px auto;
+  margin: 32px auto;
+}
+
+.rsvp > .filet {
+  margin: 24px auto 28px;
 }
 
 /* --- Fenêtre de choix du dessert --- */
