@@ -173,8 +173,8 @@ async function chargerLieux() {
 }
 
 // --- Formulaire de présence ---
-// Une carte par personne : nom, une ligne « Présent | Absent » par événement de l'invitation,
-// puis « végétarien » et le choix du dessert (pour la soirée).
+// Une carte par personne : nom, puis un groupe par jour avec une ligne « Présent | Absent »
+// par événement de l'invitation, le menu du jour et le choix du dessert (pour la soirée).
 
 let compteurPersonnes = 0;
 
@@ -188,8 +188,32 @@ function texteTraduit(balise, cle, classe) {
   return noeud;
 }
 
+// Pictogrammes dorés en tête de ligne : ceux des cartes du programme pour les événements,
+// des couverts pour le menu et un gâteau pour le dessert.
+const ICONE_COUVERTS =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v6a2 2 0 0 0 4 0V3M8 3v18M16 21V3c-2 1-3 4-3 8h3" ' +
+  'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const ICONE_GATEAU =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18v-6L12 9 3 14zM3 17h18M3 14h18" ' +
+  'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+  '<circle cx="13" cy="6" r="2" fill="currentColor"/></svg>';
+
+function iconeEvenement(cle) {
+  const icone = element("img", "champ-icone");
+  icone.src = `assets/img/icone-${cle}.png`;
+  icone.alt = "";
+  return icone;
+}
+
+function iconeDessin(svg) {
+  const icone = element("span", "champ-icone");
+  icone.innerHTML = svg;
+  return icone;
+}
+
 // Choix segmenté : deux boutons radio stylés, le choix actif est rempli.
-function creerChoixSegmente(nomGroupe, cleIntitule, options) {
+function creerChoixSegmente(nomGroupe, cleIntitule, options, icone) {
   const groupe = element("div", "champ");
   groupe.setAttribute("role", "radiogroup");
   const intitule = texteTraduit("span", cleIntitule, "intitule");
@@ -208,7 +232,7 @@ function creerChoixSegmente(nomGroupe, cleIntitule, options) {
     segmente.append(option);
   });
 
-  groupe.append(intitule, segmente);
+  groupe.append(icone, intitule, segmente);
   return groupe;
 }
 
@@ -216,7 +240,7 @@ function creerChoixPresence(idPersonne, cle) {
   const groupe = creerChoixSegmente(`${idPersonne}-${cle}`, `evt-${cle}-court`, [
     { valeur: "present", cleTexte: "rsvp-present", coche: true },
     { valeur: "absent", cleTexte: "rsvp-absent", coche: false, classe: "option-absent" },
-  ]);
+  ], iconeEvenement(cle));
   groupe.querySelectorAll("input").forEach((radio) => {
     radio.dataset.evenement = cle;
   });
@@ -228,7 +252,7 @@ function creerChoixMenu(idPersonne, jour) {
   const groupe = creerChoixSegmente(`${idPersonne}-menu-${jour}`, "rsvp-menu", [
     { valeur: "vegetarien", cleTexte: "rsvp-vegetarien", coche: false },
     { valeur: "non-vegetarien", cleTexte: "rsvp-non-vegetarien", coche: true },
-  ]);
+  ], iconeDessin(ICONE_COUVERTS));
   groupe.classList.add("champ-menu");
   groupe.querySelectorAll("input").forEach((radio) => {
     radio.dataset.jour = jour;
@@ -260,6 +284,10 @@ const ICONE_CRAYON =
   '<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" fill="none" stroke="currentColor" ' +
   'stroke-width="1.8" stroke-linejoin="round"/></svg>';
 
+const ICONE_CHEVRON =
+  '<svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">' +
+  '<path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 let boutonDessertActif = null;
 
 function imageDessert(dessert, classe) {
@@ -273,6 +301,7 @@ function afficherDessert(bouton) {
   const dessert = bouton.value;
   if (!dessert) {
     bouton.replaceChildren(element("span", "", t("rsvp-dessert-choisir")));
+    bouton.insertAdjacentHTML("beforeend", ICONE_CHEVRON);
     bouton.setAttribute("aria-label", `${t("rsvp-dessert")} : ${t("rsvp-dessert-choisir")}`);
     return;
   }
@@ -334,12 +363,18 @@ const ICONE_POUBELLE =
 
 function creerGroupeJour(idPersonne, { jour, evenements }) {
   const groupe = element("fieldset", "jour");
-  groupe.append(texteTraduit("legend", `jour-${jour}`));
+  const legende = element("legend");
+  legende.append(texteTraduit("span", `jour-${jour}`, "jour-titre"));
+  groupe.append(legende);
   evenements.forEach((cle) => groupe.append(creerChoixPresence(idPersonne, cle)));
   groupe.append(creerChoixMenu(idPersonne, jour));
   if (evenements.includes(EVENEMENT_DESSERT)) {
     const champDessert = element("div", "champ champ-dessert");
-    champDessert.append(texteTraduit("span", "rsvp-dessert", "intitule"), creerBoutonDessert());
+    champDessert.append(
+      iconeDessin(ICONE_GATEAU),
+      texteTraduit("span", "rsvp-dessert", "intitule"),
+      creerBoutonDessert(),
+    );
     groupe.append(champDessert);
   }
   return groupe;
@@ -433,8 +468,9 @@ async function envoyerReponse(evenement) {
     return;
   }
   const bouton = document.getElementById("envoyer-rsvp");
+  const libelle = bouton.querySelector("[data-i18n]");
   bouton.disabled = true;
-  bouton.textContent = t("rsvp-envoi");
+  libelle.textContent = t("rsvp-envoi");
   try {
     const envoi = construireEnvoi(etat.invitation.code, etat.langue, reponse, etat.jours);
     const resultat = await fetch(CONFIG.urlScript, {
@@ -451,7 +487,7 @@ async function envoyerReponse(evenement) {
   } catch {
     afficherMessage(["erreur-envoi"], "erreur");
     bouton.disabled = false;
-    bouton.textContent = t("rsvp-envoyer");
+    libelle.textContent = t("rsvp-envoyer");
   }
 }
 

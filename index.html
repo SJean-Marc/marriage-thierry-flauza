@@ -43,15 +43,35 @@
     <section class="section rsvp" aria-labelledby="titre-rsvp">
       <h2 id="titre-rsvp" data-i18n="rsvp-titre"></h2>
       <p class="rsvp-limite" id="rsvp-limite"></p>
+      <div class="filet" aria-hidden="true"></div>
       <form id="formulaire-rsvp" novalidate>
         <p class="rsvp-aide" data-i18n="rsvp-aide"></p>
+        <div class="rsvp-halal">
+          <svg class="halal-icone" viewBox="0 0 48 40" aria-hidden="true">
+            <path d="M6 30a18 18 0 0 1 36 0z" fill="currentColor"/>
+            <circle cx="24" cy="9" r="3" fill="currentColor"/>
+            <rect x="2" y="32" width="44" height="4" rx="2" fill="currentColor"/>
+            <path d="M14 24a11 11 0 0 1 7-8" fill="none" stroke="#fff8ec" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+          <p class="halal-texte">
+            <strong data-i18n="rsvp-halal"></strong>
+            <span data-i18n="rsvp-halal-detail"></span>
+          </p>
+        </div>
         <ul class="liste-personnes" id="liste-personnes"></ul>
-        <button type="button" class="bouton-secondaire" id="ajouter-personne" data-i18n="rsvp-ajouter"></button>
+        <button type="button" class="bouton bouton-icone" id="ajouter-personne">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span data-i18n="rsvp-ajouter"></span>
+        </button>
         <div class="piege" aria-hidden="true">
           <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
         </div>
         <p class="message" id="message-rsvp" role="status"></p>
-        <button type="submit" class="bouton" id="envoyer-rsvp" data-i18n="rsvp-envoyer"></button>
+        <div class="filet" aria-hidden="true"></div>
+        <button type="submit" class="bouton-contour bouton-icone" id="envoyer-rsvp">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 2.5 2.5 7zM10 13l11-10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <span data-i18n="rsvp-envoyer"></span>
+        </button>
       </form>
       <dialog class="fenetre-dessert" id="fenetre-dessert" aria-labelledby="titre-dessert">
         <div class="fenetre-contenu">

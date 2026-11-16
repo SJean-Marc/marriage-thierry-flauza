@@ -65,9 +65,11 @@ Date limite de réponse : **28 janvier 2027**.
 - Après la révélation : adresse complète, liens Google Maps et Waze.
 
 ### 3.3 Confirmation de présence → Google Sheets
+- En tête du formulaire, un bandeau : « Tous nos plats sont halal. Merci de sélectionner votre préférence alimentaire pour chaque repas. »
 - Formulaire en cartes : une carte par personne (ajout, suppression par une icône poubelle), deux côte à côte sur grand écran. Dans chaque carte, un groupe par jour, avec seulement les événements **de l'invitation** (version A, B ou C) :
   - **Mercredi 17 mars** : Mairie, Menu ;
   - **Jeudi 18 mars** : Cérémonie, Soirée, Menu, Dessert.
+- Chaque jour a un titre en pastille dorée (« Mercredi 17 mars 2027 ») entre deux filets ; chaque ligne commence par un pictogramme doré (ceux du programme pour les événements, couverts pour le menu, gâteau pour le dessert).
 - Les contrôles sont alignés dans une même colonne (même début, même fin). Pour chaque personne :
   - nom et prénom ;
   - pour chaque événement, un choix segmenté « Présent | Absent » (deux boutons radio, « Présent » par défaut) ;

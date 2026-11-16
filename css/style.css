@@ -8,6 +8,8 @@
   --or-clair: #e2bf73;
   --or-texte: #8a6a1f; /* or assombri pour le texte sur crème (contraste 4,8:1) ; --or reste pour les filets */
   --brun-absent: #6b5646;
+  --peche: #f6ddb8; /* fond doré pâle des pastilles (jours, bandeau halal) */
+  --peche-clair: #fdf1de;
   --erreur: #a3122a;
   --texte: #3b2a20;
   --texte-doux: #7a6250;
@@ -207,7 +209,22 @@ body {
   color: var(--texte);
   font-style: italic;
   font-weight: 600;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+}
+
+/* Petits téléphones : carte moins rembourrée, pour que « Cérémonie » tienne sur une ligne. */
+@media (max-width: 400px) {
+  .personne {
+    padding: 14px 10px;
+  }
+
+  .champ {
+    grid-template-columns: 1.6rem minmax(0, 1fr) 56%;
+  }
+
+  .intitule {
+    font-size: 1.05rem;
+  }
 }
 
 /* Ornement doré du faire-part entre deux filets */
@@ -441,15 +458,44 @@ h2::after {
   cursor: wait;
 }
 
-.bouton-secondaire {
-  min-height: 44px;
-  padding: 8px 20px;
+/* Bouton contour doré (« Envoyer ma réponse »). */
+.bouton-contour {
+  padding: 12px 26px;
   border: 1px solid var(--or);
   border-radius: 999px;
-  background: transparent;
+  background: var(--fond-clair);
   color: var(--bordeaux);
-  font: 600 1rem var(--police-titre);
+  font: 600 1.15rem var(--police-titre);
+  letter-spacing: 0.03em;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bouton-contour:hover,
+.bouton-contour:focus-visible {
+  background: var(--peche-clair);
+}
+
+.bouton-contour:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Bouton large avec pictogramme à gauche du texte. */
+.bouton-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: min(100%, 24rem);
+  min-height: 52px;
+  margin: 0 auto;
+}
+
+.bouton-icone svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
 }
 
 /* --- Formulaire de présence --- */
@@ -459,8 +505,63 @@ h2::after {
   margin: 0 auto;
 }
 
+.rsvp-limite {
+  color: var(--bordeaux);
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
 .rsvp-aide {
-  color: var(--texte-doux);
+  max-width: 40ch;
+  margin: 0 auto;
+  color: var(--texte);
+  font-style: italic;
+  font-size: 1.2rem;
+}
+
+:lang(ta) .rsvp-limite,
+:lang(ta) .halal-texte span {
+  font-style: normal;
+}
+
+/* Bandeau « Tous nos plats sont halal » : cloche dorée, filet vertical, texte. */
+.rsvp-halal {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 36rem;
+  margin: 24px auto;
+  padding: 10px 22px;
+  border: 1px solid var(--or-clair);
+  border-radius: 40px;
+  background: linear-gradient(180deg, var(--peche-clair), var(--peche));
+}
+
+.halal-icone {
+  flex: none;
+  width: 44px;
+  height: 37px;
+  color: var(--or-texte);
+}
+
+.halal-texte {
+  flex: 1;
+  margin: 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--or);
+  line-height: 1.3;
+}
+
+.halal-texte strong {
+  display: block;
+  color: var(--bordeaux);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.halal-texte span {
+  display: block;
+  font-size: 0.95rem;
   font-style: italic;
 }
 
@@ -480,7 +581,7 @@ h2::after {
   flex-direction: column;
   padding: 16px;
   border: 1px solid var(--or);
-  border-radius: 18px;
+  border-radius: 24px;
   background: var(--fond-clair);
   box-shadow: 0 6px 18px rgba(94, 11, 30, 0.06);
   text-align: left;
@@ -500,58 +601,112 @@ h2::after {
   border: 0;
 }
 
+/* Date du jour en pastille dorée, entre deux filets terminés par un losange. */
 .jour legend {
-  padding: 0 0 4px;
-  color: var(--or-texte);
-  font: 600 0.95rem var(--police-titre);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  float: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
 }
 
-:lang(ta) .jour legend {
+.jour legend::before,
+.jour legend::after {
+  content: "";
+  flex: 1;
+  height: 10px;
+  min-width: 16px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 0l5 5-5 5-5-5z' fill='%23b8862f'/%3E%3C/svg%3E")
+      right center / 9px 9px no-repeat,
+    linear-gradient(var(--or), var(--or)) left center / calc(100% - 14px) 1px no-repeat;
+}
+
+.jour legend::after {
+  transform: scaleX(-1);
+}
+
+.jour-titre {
+  padding: 3px 18px;
+  border: 1px solid var(--or-clair);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--peche-clair), var(--peche));
+  color: var(--bordeaux);
+  font: 600 1.15rem var(--police-titre);
+  font-variant-numeric: lining-nums; /* « font » remet les chiffres en style ancien */
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+:lang(ta) .jour-titre {
   font-family: "Noto Serif Tamil", var(--police-titre);
+  font-size: 0.95rem;
   letter-spacing: 0;
-  text-transform: none;
 }
 
-/* Intitulé à gauche, contrôle à droite : tous les contrôles ont la même colonne (même début, même fin). */
+.jour > .champ {
+  clear: both;
+}
+
+/* Pictogramme, intitulé, puis le contrôle : tous les contrôles ont la même colonne (même début, même fin). */
 .champ {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) min(14rem, 66%);
+  grid-template-columns: 1.75rem minmax(0, 1fr) min(14.5rem, 58%);
   align-items: center;
-  gap: 6px 12px;
+  gap: 6px 8px;
   min-height: 52px;
   padding: 4px 0;
-  border-top: 1px dotted var(--or-clair);
 }
 
 /* Tamoul : intitulés longs, le contrôle passe dessous, sur toute la largeur. */
 :lang(ta) .champ {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1.75rem 1fr;
   padding: 6px 0 8px;
+}
+
+:lang(ta) .champ > :last-child {
+  grid-column: 1 / -1;
+}
+
+.champ-icone {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+  color: var(--or-texte);
+}
+
+.champ-icone svg {
+  width: 100%;
+  height: 100%;
 }
 
 .intitule {
   color: var(--bordeaux);
   font-weight: 600;
+  font-size: 1.15rem;
 }
 
-/* « Menu » en retrait, avec un petit angle doré : il découle des événements du jour. */
-.champ-menu .intitule {
-  position: relative;
-  padding-left: 1.4em;
+/* Petits téléphones : carte moins rembourrée, pour que « Cérémonie » tienne sur une ligne. */
+@media (max-width: 400px) {
+  .personne {
+    padding: 14px 10px;
+  }
+
+  .champ {
+    grid-template-columns: 1.6rem minmax(0, 1fr) 56%;
+  }
+
+  .intitule {
+    font-size: 1.05rem;
+  }
 }
 
-.champ-menu .intitule::before {
-  content: "";
-  position: absolute;
-  left: 0.3em;
-  top: 0.15em;
-  width: 0.7em;
-  height: 0.55em;
-  border-left: 1.5px solid var(--or);
-  border-bottom: 1.5px solid var(--or);
-  border-bottom-left-radius: 3px;
+:lang(ta) .intitule {
+  font-size: 1rem;
 }
 
 .champ-nom {
@@ -581,19 +736,31 @@ h2::after {
   padding: 4px 14px 4px 6px;
   border: 1px solid var(--or);
   border-radius: 999px;
-  background: #fff;
+  background: var(--fond-clair);
   color: var(--bordeaux);
-  font: 600 1rem var(--police-titre);
+  font: 600 1.05rem var(--police-titre);
   text-align: left;
   cursor: pointer;
 }
 
-.bouton-dessert:has(> span:only-child) span {
-  text-align: center;
+/* « Choisir… » centré, chevron à droite (le retrait à gauche compense le chevron). */
+.bouton-dessert:not(:has(img)) {
+  padding-left: 32px;
 }
 
 .bouton-dessert span {
   flex: 1;
+}
+
+.bouton-dessert:not(:has(img)) span {
+  text-align: center;
+}
+
+.chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--or-texte);
 }
 
 .dessert-miniature {
@@ -621,25 +788,25 @@ h2::after {
   box-shadow: 0 0 0 1px var(--erreur);
 }
 
-/* Choix segmenté (« Présent | Absent », « Végétarien | Non végétarien ») : deux boutons radio, le choix actif est rempli. */
+/* Choix segmenté (« Présent | Absent », « Végétarien | Non végétarien ») : deux boutons radio
+   en pastilles séparées, le choix actif est rempli. */
 .segmente {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 44px;
-  padding: 3px;
-  border: 1px solid var(--or);
-  border-radius: 999px;
-  background: #fff;
+  gap: 8px;
 }
 
 .segmente label {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
   padding: 4px 8px;
+  border: 1px solid var(--or);
   border-radius: 999px;
-  color: var(--texte-doux);
-  font: 600 0.95rem var(--police-titre);
+  background: var(--fond-clair);
+  color: var(--bordeaux);
+  font: 600 1rem var(--police-titre);
   line-height: 1.15;
   text-align: center;
   cursor: pointer;
@@ -659,12 +826,16 @@ h2::after {
 }
 
 .segmente label:has(input:checked) {
-  background: var(--bordeaux);
+  border-color: var(--bordeaux);
+  background: linear-gradient(180deg, #951a37, var(--bordeaux-fonce));
+  box-shadow: 0 3px 8px rgba(94, 11, 30, 0.22);
   color: var(--fond-clair);
 }
 
 .segmente .option-absent:has(input:checked) {
-  background: var(--brun-absent);
+  border-color: var(--brun-absent);
+  background: linear-gradient(180deg, #7d6655, #574537);
+  box-shadow: 0 3px 8px rgba(59, 42, 32, 0.2);
   color: var(--fond-clair);
 }
 
@@ -716,8 +887,8 @@ h2::after {
   display: none;
 }
 
-#envoyer-rsvp {
-  margin-top: 28px;
+#formulaire-rsvp .filet {
+  margin: 24px auto;
 }
 
 /* --- Fenêtre de choix du dessert --- */
