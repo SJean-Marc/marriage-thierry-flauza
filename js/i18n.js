@@ -112,7 +112,7 @@ export const TEXTES = {
     "fermer": "மூடு",
     "dessert-velvet": "வெல்வெட் – சிவப்புப் பழங்கள்",
     "dessert-pistache": "பிஸ்தா – சிவப்புப் பழங்கள்",
-    "dessert-exotique": "வெப்பமண்டலப் பழங்கள்",
+    "dessert-exotique": "மாம்பழம் – பேஷன் ஃப்ரூட்",
     "rsvp-nom": "பெயர்",
     "jour-mercredi": "புதன், 17 மார்ச் 2027",
     "jour-jeudi": "வியாழன், 18 மார்ச் 2027",
