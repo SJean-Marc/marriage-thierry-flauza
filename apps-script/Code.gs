@@ -1,4 +1,6 @@
+/** @OnlyCurrentDoc */
 // Script Google Apps Script lié à la Google Sheet des réponses.
+// @OnlyCurrentDoc limite l'autorisation du script à cette seule feuille (pas tout le Drive).
 // - doPost : enregistre les réponses au formulaire de présence (une ligne par personne) :
 //            par événement « présent », « absent » ou vide si non invité ; par jour le menu
 //            « végétarien » / « non végétarien », vide si non invité ou absent ce jour-là.
@@ -8,6 +10,12 @@
 // - DATE_REVELATION : date au format AAAA-MM-JJ (heure de Paris), ex. 2027-03-01
 // - LIEUX           : JSON {"mairie": {"nom": "...", "adresse": "..."}, "religieux": {...}, "soiree": {...}}
 // Les lieux ne sont jamais publiés dans le dépôt GitHub.
+//
+// Protections de doPost (l'URL du script et les codes d'invitation sont publics) :
+// - formulaire fermé à partir du lendemain du mariage (DATE_FERMETURE, heure de Paris) ;
+// - au plus MAX_ENVOIS_PAR_FENETRE envois toutes les 10 minutes, tous invités confondus ;
+// - feuille plafonnée à MAX_LIGNES lignes ;
+// - noms en texte brut : pas de formule, pas de caractère de contrôle, pas de conversion en nombre ou en date.
 
 // Doit rester identique à CONFIG.versions et CONFIG.evenementsParVersion (js/config.js).
 const CODES = { CgX4ht: "A", NXrmCt: "B", rLXUq7: "C" };
@@ -43,15 +51,27 @@ const ENTETES = ["Horodatage", "Réponse n°", "Version", "Langue", "Nom"].conca
   }),
   ["Dessert"],
 );
+const COLONNE_NOM = ENTETES.indexOf("Nom") + 1;
 const LANGUES = ["fr", "ta"];
 const MAX_PERSONNES = 20;
 const MAX_LONGUEUR_NOM = 100;
+const CARACTERES_DE_CONTROLE = /[\u0000-\u001f\u007f]/;
+
+const DATE_FERMETURE = "2027-03-19"; // lendemain du mariage
+const MAX_LIGNES = 1500;
+const MAX_ENVOIS_PAR_FENETRE = 30;
+const FENETRE_SECONDES = 600;
+
+// Version (A, B ou C) du code d'invitation, ou null ; ignore les clés héritées comme « constructor ».
+function versionDuCode(code) {
+  return Object.prototype.hasOwnProperty.call(CODES, code) ? CODES[code] : null;
+}
 
 function doGet(e) {
   if (e.parameter.action !== "lieux") {
     return repondre({ erreur: "action-inconnue" });
   }
-  const version = CODES[e.parameter.i];
+  const version = versionDuCode(e.parameter.i);
   if (!version) {
     return repondre({ erreur: "invitation-invalide" });
   }
@@ -81,6 +101,12 @@ function doPost(e) {
   } catch (erreur) {
     return repondre({ ok: false, erreur: "json-invalide" });
   }
+  if (donnees === null || typeof donnees !== "object" || Array.isArray(donnees)) {
+    return repondre({ ok: false, erreur: "json-invalide" });
+  }
+  if (formulaireFerme(new Date())) {
+    return repondre({ ok: false, erreur: "formulaire-ferme" });
+  }
   if (donnees.site) {
     // Champ piège rempli : robot. On répond comme si tout allait bien, sans rien enregistrer.
     return repondre({ ok: true });
@@ -89,12 +115,29 @@ function doPost(e) {
   if (erreur) {
     return repondre({ ok: false, erreur: erreur });
   }
-  enregistrer(donnees);
-  return repondre({ ok: true });
+  const refus = enregistrer(donnees);
+  return repondre(refus ? { ok: false, erreur: refus } : { ok: true });
+}
+
+function formulaireFerme(maintenant) {
+  return maintenant >= new Date(DATE_FERMETURE + "T00:00:00+01:00");
+}
+
+// Compte un envoi dans la fenêtre de 10 minutes en cours ; false si la limite est atteinte.
+// À appeler sous le verrou, pour que deux envois simultanés ne lisent pas le même compteur.
+function accepterEnvoi(maintenant) {
+  const cache = CacheService.getScriptCache();
+  const cle = "envois-" + Math.floor(maintenant.getTime() / (FENETRE_SECONDES * 1000));
+  const envois = Number(cache.get(cle) || 0);
+  if (envois >= MAX_ENVOIS_PAR_FENETRE) {
+    return false;
+  }
+  cache.put(cle, String(envois + 1), FENETRE_SECONDES);
+  return true;
 }
 
 function validerEnvoi(donnees) {
-  const version = CODES[donnees.code];
+  const version = versionDuCode(donnees.code);
   if (!version) {
     return "invitation-invalide";
   }
@@ -111,6 +154,7 @@ function validerEnvoi(donnees) {
         typeof personne.nom === "string" &&
         personne.nom.trim() !== "" &&
         personne.nom.length <= MAX_LONGUEUR_NOM &&
+        !CARACTERES_DE_CONTROLE.test(personne.nom) &&
         booleensValides(personne.presences, evenements) &&
         booleensValides(personne.vegetarien, joursInvites(evenements))
       );
@@ -172,14 +216,21 @@ function estUnDessert(dessert) {
   return typeof dessert === "string" && Object.prototype.hasOwnProperty.call(DESSERTS, dessert);
 }
 
+// Écrit les lignes de la réponse ; renvoie le code du refus, ou null si tout est enregistré.
 function enregistrer(donnees) {
   const verrou = LockService.getScriptLock();
   verrou.waitLock(10000);
   try {
-    const feuille = obtenirFeuille();
     const horodatage = new Date();
+    if (!accepterEnvoi(horodatage)) {
+      return "trop-d-envois";
+    }
+    const feuille = obtenirFeuille();
+    if (feuille.getLastRow() + donnees.personnes.length > MAX_LIGNES) {
+      return "feuille-pleine";
+    }
     const numero = Utilities.getUuid().slice(0, 8);
-    const version = CODES[donnees.code];
+    const version = versionDuCode(donnees.code);
     const evenements = EVENEMENTS[version];
     const langue = LANGUES.indexOf(donnees.langue) >= 0 ? donnees.langue : "fr";
     const lignes = donnees.personnes.map(function (personne) {
@@ -191,7 +242,11 @@ function enregistrer(donnees) {
         [choisitUnDessert(personne, evenements) ? DESSERTS[personne.dessert] : ""],
       );
     });
-    feuille.getRange(feuille.getLastRow() + 1, 1, lignes.length, ENTETES.length).setValues(lignes);
+    const premiereLigne = feuille.getLastRow() + 1;
+    // Format texte : un nom comme « 1/2 » ou « 0612 » n'est pas converti en date ou en nombre.
+    feuille.getRange(premiereLigne, COLONNE_NOM, lignes.length, 1).setNumberFormat("@");
+    feuille.getRange(premiereLigne, 1, lignes.length, ENTETES.length).setValues(lignes);
+    return null;
   } finally {
     verrou.releaseLock();
   }

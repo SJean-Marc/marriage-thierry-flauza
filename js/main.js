@@ -484,8 +484,8 @@ async function envoyerReponse(evenement) {
     formulaire.replaceChildren(
       element("p", "message succes", t(viennent ? "rsvp-merci-oui" : "rsvp-merci-non")),
     );
-  } catch {
-    afficherMessage(["erreur-envoi"], "erreur");
+  } catch (erreur) {
+    afficherMessage([erreur.message === "formulaire-ferme" ? "erreur-ferme" : "erreur-envoi"], "erreur");
     bouton.disabled = false;
     libelle.textContent = t("rsvp-envoyer");
   }

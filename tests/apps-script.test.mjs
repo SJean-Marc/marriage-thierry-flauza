@@ -14,19 +14,23 @@ const LIEUX = {
 function creerFeuille(lignesInitiales = []) {
   return {
     lignes: [...lignesInitiales],
+    formats: [],
     getLastRow() {
       return this.lignes.length;
     },
     appendRow(ligne) {
       this.lignes.push(ligne);
     },
-    getRange() {
-      return { setValues: (valeurs) => this.lignes.push(...valeurs) };
+    getRange(ligne, colonne, nombreLignes, nombreColonnes) {
+      return {
+        setValues: (valeurs) => this.lignes.push(...valeurs),
+        setNumberFormat: (format) => this.formats.push({ ligne, colonne, nombreLignes, nombreColonnes, format }),
+      };
     },
   };
 }
 
-function creerScript({ proprietes = {}, feuilleExistante = null } = {}) {
+function creerScript({ proprietes = {}, feuilleExistante = null, ferme = false } = {}) {
   const feuille = feuilleExistante ?? creerFeuille();
   const classeur = {
     feuilles: feuilleExistante ? { "Réponses": feuilleExistante } : {},
@@ -39,7 +43,14 @@ function creerScript({ proprietes = {}, feuilleExistante = null } = {}) {
     },
   };
   const verrou = { pris: false, libere: false };
+  const cache = new Map();
   const contexte = {
+    CacheService: {
+      getScriptCache: () => ({
+        get: (cle) => cache.get(cle)?.valeur ?? null,
+        put: (cle, valeur, expiration) => cache.set(cle, { valeur, expiration }),
+      }),
+    },
     PropertiesService: {
       getScriptProperties: () => ({ getProperty: (cle) => proprietes[cle] ?? null }),
     },
@@ -68,7 +79,12 @@ function creerScript({ proprietes = {}, feuilleExistante = null } = {}) {
   };
   vm.createContext(contexte);
   vm.runInContext(SOURCE, contexte);
-  return { contexte, feuille, verrou };
+  // Les tests d'envoi ne doivent pas dépendre du jour où ils tournent : formulaire ouvert par défaut
+  // (formulaireFerme est testée à part, avec des dates fixes).
+  const formulaireFerme = contexte.formulaireFerme;
+  contexte.formulaireFerme = () => ferme;
+  contexte.formulaireFermeReel = formulaireFerme;
+  return { contexte, feuille, verrou, cache };
 }
 
 function json(sortie) {
@@ -115,12 +131,14 @@ describe("doGet", () => {
     });
   });
 
-  it("should_reject_unknown_invitation_code", () => {
-    const { contexte } = creerScript();
-    assert.deepEqual(json(contexte.doGet({ parameter: { action: "lieux", i: "faux" } })), {
-      erreur: "invitation-invalide",
+  for (const code of ["faux", "constructor", "__proto__"]) {
+    it(`should_reject_invitation_code_${code}`, () => {
+      const { contexte } = creerScript();
+      assert.deepEqual(json(contexte.doGet({ parameter: { action: "lieux", i: code } })), {
+        erreur: "invitation-invalide",
+      });
     });
-  });
+  }
 
   it("should_hide_places_before_reveal_date", () => {
     const { contexte } = creerScript({
@@ -174,6 +192,18 @@ describe("lieuxPourVersion", () => {
     const { contexte } = creerScript({ proprietes: { DATE_REVELATION: "2027-03-01" } });
     const resultat = JSON.parse(JSON.stringify(contexte.lieuxPourVersion("C", new Date("2027-03-02"))));
     assert.deepEqual(resultat.lieux, {});
+  });
+});
+
+describe("formulaireFerme", () => {
+  it("should_keep_the_form_open_until_the_end_of_the_wedding_day_paris_time", () => {
+    const { contexte } = creerScript();
+    assert.equal(contexte.formulaireFermeReel(new Date("2027-03-18T22:59:59Z")), false);
+  });
+
+  it("should_close_the_form_on_the_day_after_the_wedding_paris_time", () => {
+    const { contexte } = creerScript();
+    assert.equal(contexte.formulaireFermeReel(new Date("2027-03-18T23:00:00Z")), true);
   });
 });
 
@@ -272,11 +302,59 @@ describe("doPost", () => {
     assert.deepEqual(json(sortie), { ok: false, erreur: "json-invalide" });
   });
 
-  it("should_reject_unknown_invitation_code", () => {
-    assert.deepEqual(poster(script.contexte, { ...ENVOI_VALIDE, code: "faux" }), {
-      ok: false,
-      erreur: "invitation-invalide",
+  for (const [cas, contenu] of Object.entries({ null: null, texte: "bonjour", tableau: [ENVOI_VALIDE] })) {
+    it(`should_reject_json_that_is_not_an_object_when_${cas}`, () => {
+      assert.deepEqual(poster(script.contexte, contenu), { ok: false, erreur: "json-invalide" });
     });
+  }
+
+  for (const code of ["faux", "constructor", "__proto__", "toString"]) {
+    it(`should_reject_invitation_code_${code}`, () => {
+      assert.deepEqual(poster(script.contexte, { ...ENVOI_VALIDE, code }), {
+        ok: false,
+        erreur: "invitation-invalide",
+      });
+    });
+  }
+
+  it("should_format_the_name_column_as_plain_text_for_the_new_rows", () => {
+    poster(script.contexte, ENVOI_VALIDE);
+    assert.deepEqual(script.feuille.formats, [
+      { ligne: 2, colonne: 5, nombreLignes: 2, nombreColonnes: 1, format: "@" },
+    ]);
+  });
+
+  it("should_refuse_answers_once_the_form_is_closed", () => {
+    const { contexte, feuille } = creerScript({ ferme: true });
+    assert.deepEqual(poster(contexte, ENVOI_VALIDE), { ok: false, erreur: "formulaire-ferme" });
+    assert.equal(feuille.lignes.length, 0);
+  });
+
+  it("should_accept_thirty_answers_per_ten_minutes_then_refuse", () => {
+    const envoi = { ...ENVOI_VALIDE, personnes: [invite("Thierry")] };
+    for (let i = 0; i < 30; i++) {
+      assert.deepEqual(poster(script.contexte, envoi), { ok: true });
+    }
+    assert.deepEqual(poster(script.contexte, envoi), { ok: false, erreur: "trop-d-envois" });
+    assert.equal(script.feuille.lignes.length, 31);
+    assert.equal(script.verrou.libere, true);
+  });
+
+  it("should_keep_the_answer_counter_for_ten_minutes", () => {
+    poster(script.contexte, ENVOI_VALIDE);
+    const [[cle, { valeur, expiration }]] = script.cache.entries();
+    assert.match(cle, /^envois-\d+$/);
+    assert.equal(valeur, "1");
+    assert.equal(expiration, 600);
+  });
+
+  it("should_refuse_answers_that_would_exceed_1500_rows", () => {
+    const feuille = creerFeuille(Array.from({ length: 1499 }, () => ["ligne"]));
+    const { contexte } = creerScript({ feuilleExistante: feuille });
+    assert.deepEqual(poster(contexte, ENVOI_VALIDE), { ok: false, erreur: "feuille-pleine" });
+    assert.equal(feuille.lignes.length, 1499);
+    assert.deepEqual(poster(contexte, { ...ENVOI_VALIDE, personnes: [invite("Thierry")] }), { ok: true });
+    assert.equal(feuille.lignes.length, 1500);
   });
 
   const DESSERTS_INVALIDES = { absent: undefined, inconnu: "chocolat", prototype: "toString" };
@@ -300,6 +378,10 @@ describe("doPost", () => {
     nom_non_texte: [invite(42)],
     nom_blanc: [invite("  ")],
     nom_trop_long: [invite("x".repeat(101))],
+    nom_avec_saut_de_ligne: [invite("Thierry\nFlauza")],
+    nom_avec_tabulation: [invite("Thierry\t")],
+    nom_avec_caractere_nul: [invite("Thierry\u0000")],
+    nom_avec_suppression: [invite("Thierry\u007f")],
     presences_absentes: [invite("Thierry", { presences: undefined })],
     presences_nulles: [invite("Thierry", { presences: null })],
     presence_manquante: [invite("Thierry", { presences: { religieux: true, soiree: true } })],

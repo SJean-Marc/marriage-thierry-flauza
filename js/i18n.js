@@ -62,6 +62,7 @@ export const TEXTES = {
     "erreur-nom": "Renseignez le nom de chaque personne.",
     "erreur-envoi": "L'envoi a échoué. Réessayez dans un instant.",
     "erreur-non-configure": "Le formulaire n'est pas encore ouvert.",
+    "erreur-ferme": "Le formulaire est fermé : les réponses ne sont plus acceptées.",
     "cagnotte-titre": "Cagnotte",
     "cagnotte-texte":
       "Votre présence est notre plus beau cadeau. Si vous souhaitez participer à notre cagnotte, voici comment faire.",
@@ -129,6 +130,7 @@ export const TEXTES = {
     "erreur-nom": "ஒவ்வொருவரின் பெயரையும் உள்ளிடவும்.",
     "erreur-envoi": "அனுப்புதல் தோல்வியடைந்தது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.",
     "erreur-non-configure": "படிவம் இன்னும் திறக்கப்படவில்லை.",
+    "erreur-ferme": "படிவம் மூடப்பட்டது: பதில்கள் இனி ஏற்கப்படாது.",
     "cagnotte-titre": "அன்பளிப்பு",
     "cagnotte-texte":
       "உங்கள் வருகையே எங்களுக்குச் சிறந்த பரிசு. அன்பளிப்பு வழங்க விரும்பினால், கீழ்க்கண்ட வழிகளைப் பயன்படுத்தலாம்.",

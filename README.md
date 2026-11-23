@@ -35,6 +35,15 @@ node --test --experimental-test-coverage tests/
 
 Les réponses arrivent dans l'onglet « Réponses » (une ligne par personne).
 
+Après une modification du script : **Déployer > Gérer les déploiements > Modifier > Nouvelle version** (l'URL reste la même ; un « Nouveau déploiement » en créerait une autre).
+
+### Sécurité côté Google
+
+- Partager la Sheet uniquement avec des personnes nommées, jamais « toute personne disposant du lien ».
+- Activer la validation en deux étapes sur le compte Google propriétaire.
+- Relire la feuille avant d'envoyer les chiffres au traiteur (l'historique des versions montre qui a modifié quoi).
+- Le script refuse les réponses à partir du 19/03/2027 (`DATE_FERMETURE`), au-delà de 30 envois par 10 minutes et de 1 500 lignes (voir l'en-tête de `apps-script/Code.gs`).
+
 ## Valeurs provisoires à remplacer (`js/config.js`)
 
 - liens Lydia et PayPal ;

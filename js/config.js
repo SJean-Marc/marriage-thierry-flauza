@@ -5,7 +5,7 @@
 export const CONFIG = {
   // URL de l'application web Google Apps Script (Déployer > Nouveau déploiement > Application web).
   // Vide = formulaire et lieux désactivés (affichage d'un message).
-  urlScript: "",
+  urlScript: "https://script.google.com/macros/s/AKfycbxkaMnIyrF_XSBLYEl-WhEFW1L-51KV0WfzOxcpYZY9yH5TuKDa8cowo4SG5ISSXLxG/exec",
 
   dateLimiteReponse: "2027-01-28",
 

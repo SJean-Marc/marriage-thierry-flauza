@@ -81,6 +81,13 @@ Date limite de réponse : **28 janvier 2027**.
 - Le script vérifie que les présences correspondent aux événements de la version et que le dessert est valide.
 - Message de confirmation après l'envoi, et indication de la date limite du 28/01/2027.
 - Anti-spam léger : champ piège invisible (*honeypot*), refus des envois vides.
+- Protections du script (son URL et les codes d'invitation sont publics) :
+  - formulaire fermé à partir du lendemain du mariage (19/03/2027, heure de Paris), avec un message dédié sur le site ;
+  - au plus 30 envois toutes les 10 minutes, tous invités confondus ;
+  - feuille plafonnée à 1 500 lignes ;
+  - noms en texte brut : formules neutralisées, caractères de contrôle refusés, colonne « Nom » au format texte ;
+  - autorisation du script limitée à la feuille des réponses (`@OnlyCurrentDoc`).
+- Pas de captcha pour l'instant : à ajouter (Cloudflare Turnstile, vérifié par le script) seulement si du spam réel apparaît.
 
 ### 3.4 Cagnotte
 - Rubrique « Cagnotte » : boutons Lydia et PayPal (aucun numéro de téléphone affiché). Valeurs provisoires dans `js/config.js`.
