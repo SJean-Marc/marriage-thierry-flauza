@@ -36,8 +36,6 @@ export const CONFIG = {
 
   contact: "flauza.thierry@gmail.com",
 
-  photos: {
-    voir: "https://www.pcloud.com/", // PROVISOIRE : lien de partage pCloud
-    deposer: "https://www.pcloud.com/", // PROVISOIRE : lien de dépôt (upload link) pCloud
-  },
+  // Lien de dépôt pCloud (upload link) : les invités déposent leurs fichiers sans compte, sans voir ceux des autres.
+  depotPhotos: "https://e.pcloud.com/#/puplink?code=eOv7ZHcXzHBx2kDQDy5ocxyisbBkBnKRy",
 };

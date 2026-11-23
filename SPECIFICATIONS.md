@@ -93,8 +93,8 @@ Date limite de réponse : **28 janvier 2027**.
 - Rubrique « Cagnotte » : boutons Lydia et PayPal (aucun numéro de téléphone affiché). Valeurs provisoires dans `js/config.js`.
 
 ### 3.5 Photos & vidéos (pCloud)
-- Bouton « Voir les photos et vidéos » → lien de partage pCloud.
-- Bouton « Déposer vos photos et vidéos » → lien de dépôt pCloud (*upload link*), sans compte nécessaire pour les invités.
+- Un seul bouton « Déposer mes photos et vidéos » → lien de dépôt pCloud (*upload link*, `depotPhotos` dans `js/config.js`), sans compte nécessaire pour les invités.
+- Pas de bouton pour voir les photos : les invités peuvent seulement déposer.
 - Les fichiers ne sont pas hébergés sur le site.
 
 ### 3.6 Langues
@@ -131,6 +131,6 @@ Date limite de réponse : **28 janvier 2027**.
 - [x] Formulaire : réponse « nous ne pourrons pas venir » possible.
 - [ ] Formulaire : ajouter un téléphone ou un e-mail de contact, ou un message libre ?
 - [x] Faire-part : trois QR codes, un par version.
-- [ ] Liens pCloud (consultation + dépôt).
+- [x] Lien pCloud de dépôt (pas de consultation).
 - [ ] Relecteur tamoul.
 - [ ] Orthographe du nom du lieu de réception (voir `apps-script/lieux.local.json`).

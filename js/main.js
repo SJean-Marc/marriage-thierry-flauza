@@ -504,8 +504,7 @@ function initialiserFormulaire() {
 function initialiserLiens() {
   document.getElementById("lien-lydia").href = CONFIG.cagnotte.lydia;
   document.getElementById("lien-paypal").href = CONFIG.cagnotte.paypal;
-  document.getElementById("lien-photos-voir").href = CONFIG.photos.voir;
-  document.getElementById("lien-photos-deposer").href = CONFIG.photos.deposer;
+  document.getElementById("lien-photos-deposer").href = CONFIG.depotPhotos;
 }
 
 // --- Démarrage ---

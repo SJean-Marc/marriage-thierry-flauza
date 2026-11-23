@@ -47,5 +47,4 @@ Après une modification du script : **Déployer > Gérer les déploiements > Mod
 ## Valeurs provisoires à remplacer (`js/config.js`)
 
 - liens Lydia et PayPal ;
-- liens pCloud (consultation et dépôt) ;
 - date de révélation des lieux (propriété du script).
